@@ -1,0 +1,137 @@
+.live-monitoring {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.monitoring-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.monitoring-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.monitoring-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.control-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.control-button.start {
+  background-color: #4caf50;
+  color: white;
+}
+
+.control-button.start:hover {
+  background-color: #3d8b40;
+}
+
+.control-button.stop {
+  background-color: #f44336;
+  color: white;
+}
+
+.control-button.stop:hover {
+  background-color: #d32f2f;
+}
+
+.status-section {
+  background-color: #f5f5f5;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.status-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.status-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.status-details p {
+  margin: 0;
+  color: #666;
+}
+
+.status-details strong {
+  color: #333;
+  margin-right: 0.5rem;
+}
+
+.vehicles-section {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.vehicles-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.no-vehicles {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.vehicles-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.vehicle-card {
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.vehicle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vehicle-info p {
+  margin: 0;
+  color: #666;
+}
+
+.vehicle-info strong {
+  color: #333;
+  margin-right: 0.5rem;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+} 
