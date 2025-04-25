@@ -172,3 +172,49 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Node.js / React
+node_modules/
+/frontend/node_modules/
+/frontend/build/
+/frontend/dist/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development.local
+/frontend/.env.test.local
+/frontend/.env.production.local
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/.pnp
+/frontend/.pnp.js
+/frontend/coverage/
+/frontend/.next/
+/frontend/out/
+/frontend/.nuxt
+/frontend/dist
+/frontend/.cache/
+/frontend/.parcel-cache
+/frontend/.eslintcache
+/frontend/.stylelintcache
+/frontend/.rpt2_cache/
+/frontend/.rts2_cache_cjs/
+/frontend/.rts2_cache_es/
+/frontend/.rts2_cache_umd/
+/frontend/.vscode/
+/frontend/.DS_Store
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

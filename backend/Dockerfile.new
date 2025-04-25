@@ -29,8 +29,9 @@ RUN chmod +x /app/init_db.py
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Make the start script executable
-RUN chmod +x /app/start.sh
+# Create an entrypoint script
+COPY entrypoint.sh.new /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Use the start script as the entrypoint
-CMD ["/app/start.sh"] 
+# Use the entrypoint script
+ENTRYPOINT ["/entrypoint.sh"] 
