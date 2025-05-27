@@ -17,4 +17,8 @@ pillow==10.1.0
 python-socketio==5.10.0
 aiohttp==3.9.1
 pytest==7.4.3
-httpx==0.25.2 
+httpx==0.25.2
+
+# Database Management
+boto3==1.34.34
+SQLAlchemy==2.0.23 
