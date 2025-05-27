@@ -78,26 +78,6 @@ const Landing = () => {
             </Typography>
             <Box sx={{ mt: 4 }}>
               <Button 
-                variant="contained" 
-                size="large" 
-                startIcon={<LoginIcon />}
-                onClick={() => navigate('/login')}
-                sx={{ 
-                  mr: 2,
-                  py: 1.5,
-                  px: 4,
-                  fontSize: '1.1rem',
-                  borderRadius: 2,
-                  boxShadow: 3,
-                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #1976D2 30%, #1E88E5 90%)',
-                  }
-                }}
-              >
-                Login to Dashboard
-              </Button>
-              <Button 
                 variant="outlined" 
                 size="large"
                 onClick={() => navigate('/contact')}
@@ -115,6 +95,28 @@ const Landing = () => {
                 }}
               >
                 Contact Us
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/about')}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: '1.1rem',
+                  borderRadius: 2,
+                  borderColor: 'white',
+                  color: 'white',
+                  mt: 2,
+                  ml: 0,
+                  display: 'block',
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  }
+                }}
+              >
+                About Us
               </Button>
             </Box>
           </Grid>

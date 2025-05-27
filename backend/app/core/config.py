@@ -32,6 +32,13 @@ class Settings(BaseSettings):
             return v
         return f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}/{values.get('POSTGRES_DB')}"
 
+    # Database Backup Settings
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_BUCKET_NAME: Optional[str] = None
+    BACKUP_RETENTION_DAYS: int = 7
+    BACKUP_SCHEDULE: str = "0 0 * * *"  # Daily at midnight
+
     # Email settings for password reset
     SMTP_TLS: bool = True
     SMTP_PORT: int = 587

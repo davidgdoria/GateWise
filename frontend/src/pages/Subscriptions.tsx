@@ -10,35 +10,37 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton,
   Select,
   MenuItem,
   FormControl,
   Pagination,
+  Chip,
+  IconButton,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 
-const vehicleRows = [
-  { license: '11-AA-11', desc: 'My red car', category: 'Car' },
-  { license: '22-BB-22', desc: 'My yellow Bike', category: 'Motorcycle' },
-  { license: '22-BB-24', desc: 'Ford Fiesta', category: 'Car' },
-  { license: '23-CC-22', desc: 'Focus RS', category: 'Car' },
-  { license: '23-ZZ-22', desc: 'Mustang', category: 'Car' },
+const subscriptionRows = [
+  { plan: 'Premium', status: 'Active', next: '09/12/2027', amount: '$300' },
+  { plan: 'Basic', status: 'Expired', next: '', amount: '$199' },
 ];
 
-const Vehicles: React.FC = () => {
-  const [page, setPage] = useState(2);
+const statusColor = (status: string) => {
+  if (status === 'Active') return { label: 'Active', color: 'success', sx: { background: '#4caf50', color: '#fff', fontWeight: 700 } };
+  if (status === 'Expired') return { label: 'Expired', color: 'error', sx: { background: '#ef5350', color: '#fff', fontWeight: 700 } };
+  return { label: status, color: 'default', sx: {} };
+};
+
+const Subscriptions: React.FC = () => {
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
   return (
     <Layout>
       <Box sx={{ width: '100%' }}>
         <Typography variant="h5" fontWeight={600} mb={3}>
-          Vehicles
+          Subscriptions
         </Typography>
         <Box
           sx={{
@@ -61,9 +63,9 @@ const Vehicles: React.FC = () => {
                 fontWeight: 600,
                 '&:hover': { background: '#444' },
               }}
-              onClick={() => navigate('/vehicles/add')}
+              onClick={() => navigate('/subscriptions/add')}
             >
-              Add Vehicle
+              New subscription
             </Button>
             <Box display="flex" gap={2}>
               <Button variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
@@ -72,7 +74,7 @@ const Vehicles: React.FC = () => {
               <FormControl size="small">
                 <Select defaultValue="id" sx={{ borderRadius: 2, fontWeight: 500 }}>
                   <MenuItem value="id">Sort by: ID</MenuItem>
-                  <MenuItem value="license">Sort by: License Plate</MenuItem>
+                  <MenuItem value="plan">Sort by: Plan</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -81,21 +83,27 @@ const Vehicles: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>License Plate</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="center">Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Next Payment</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {vehicleRows.map((row) => (
-                  <TableRow key={row.license}>
-                    <TableCell sx={{ fontWeight: 700 }}>{row.license}</TableCell>
-                    <TableCell>{row.desc}</TableCell>
-                    <TableCell>{row.category}</TableCell>
+                {subscriptionRows.map((row, idx) => (
+                  <TableRow key={row.plan}>
+                    <TableCell>{row.plan}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={statusColor(row.status).label}
+                        sx={{ ...statusColor(row.status).sx, borderRadius: 1, fontWeight: 700, fontSize: 15, px: 2 }}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{row.next}</TableCell>
+                    <TableCell>{row.amount}</TableCell>
                     <TableCell align="center">
-                      <IconButton size="small" sx={{ color: '#222' }}><EditIcon /></IconButton>
-                      <IconButton size="small" sx={{ color: '#222' }}><DeleteIcon /></IconButton>
                       <IconButton size="small" sx={{ color: '#222' }}><MoreVertIcon /></IconButton>
                     </TableCell>
                   </TableRow>
@@ -123,4 +131,4 @@ const Vehicles: React.FC = () => {
   );
 };
 
-export default Vehicles; 
+export default Subscriptions; 
