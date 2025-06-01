@@ -1,7 +1,9 @@
-"""OCR service for license plate recognition."""
+"""OCR service entry point."""
 import asyncio
 import logging
-from app.ocr import Camera, ImageProcessor, PlateRecognizer
+from app.ocr.camera import Camera
+from app.ocr.processor import ImageProcessor
+from app.ocr.recognizer import PlateRecognizer
 from app.core.events import event_bus, EVENT_PLATE_DETECTED, EVENT_VEHICLE_ENTERED, EVENT_VEHICLE_EXITED
 
 # Configure logging
@@ -78,4 +80,16 @@ class OCRService:
 
     def stop(self):
         """Stop the OCR service."""
-        self.is_running = False 
+        self.is_running = False
+
+async def main():
+    """Main entry point."""
+    service = OCRService()
+    try:
+        await service.run()
+    except KeyboardInterrupt:
+        logger.info("Shutting down OCR service...")
+        service.stop()
+
+if __name__ == "__main__":
+    asyncio.run(main()) 
