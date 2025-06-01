@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     python3-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -16,14 +17,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Copy the Alembic migration template
+COPY alembic/script.py.mako alembic/script.py.mako
+
+# Create versions directory if it doesn't exist
+RUN mkdir -p /app/alembic/versions
+
 # Create a script to wait for the database and initialize it
-RUN echo '#!/bin/bash\n\
-echo "Waiting for database..."\n\
-sleep 10\n\
-python init_db.py\n\
-python seed_db.py\n\
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\n\
-' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+RUN echo '#!/bin/bash\necho "Waiting for database..."\nsleep 10\npython init_db.py\npython seed_db.py\nexec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Expose the port the app runs on
 EXPOSE 8000

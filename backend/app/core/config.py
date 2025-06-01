@@ -3,11 +3,12 @@ from pydantic import AnyHttpUrl, PostgresDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="allow")
 
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    RATE_LIMIT_PER_MINUTE: int = 60
     
     # BACKEND_CORS_ORIGINS is a comma-separated list of origins
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
@@ -26,6 +27,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+    POSTGRES_PORT: str = "5432"
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 
     @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
@@ -37,6 +39,7 @@ class Settings(BaseSettings):
             username=values.data.get("POSTGRES_USER"),
             password=values.data.get("POSTGRES_PASSWORD"),
             host=values.data.get("POSTGRES_SERVER"),
+            port=int(values.data.get("POSTGRES_PORT")),
             path=f"/{values.data.get('POSTGRES_DB') or ''}",
         )
 
@@ -55,5 +58,13 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     EMAILS_FROM_EMAIL: str = ""
     EMAILS_FROM_NAME: str = "GateWise"
+
+    DEBUG: bool = False
+    ALGORITHM: str = "HS256"
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    CAMERA_DEVICE_ID: int = 0
+    CAMERA_RESOLUTION_WIDTH: int = 1280
+    CAMERA_RESOLUTION_HEIGHT: int = 720
+    OCR_CONFIDENCE_THRESHOLD: int = 80
 
 settings = Settings()
