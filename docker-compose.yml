@@ -21,6 +21,7 @@ services:
     environment:
       - SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@db:5432/gatewise
       - SECRET_KEY=gatewise_secure_key_2024_development_environment
+      - RATE_LIMIT_PER_MINUTE=60
     depends_on:
       - db
 
@@ -34,6 +35,8 @@ services:
       - POSTGRES_DB=gatewise
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/init-scripts:/docker-entrypoint-initdb.d
+    command: ["postgres", "-c", "listen_addresses=*"]
 
 volumes:
   postgres_data: 

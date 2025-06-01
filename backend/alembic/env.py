@@ -5,13 +5,13 @@ from alembic import context
 import os
 import sys
 
-# Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# Add the backend/app directory to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'app'))
 
 # Import your models and configuration
 from app.core.config import settings
-from app.db.base_class import Base
-from app.models import models  # This will import all models
+from app.db.base_class import Base 
+import app.models.models  # This will import all models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,11 +23,16 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Set the database URL in the alembic.ini file
-config.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
+config.set_main_option("sqlalchemy.url", str(settings.SQLALCHEMY_DATABASE_URI))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 target_metadata = Base.metadata
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

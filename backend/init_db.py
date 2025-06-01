@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from app.models.models import Base
 from app.core.config import settings
@@ -12,8 +12,11 @@ def init_db():
     """
     print("Initializing database...")
     
+    # Convert PostgresDsn to string for SQLAlchemy
+    DATABASE_URL = str(settings.SQLALCHEMY_DATABASE_URI)
+    
     # Create database engine
-    engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+    engine = create_engine(DATABASE_URL)
     
     # Wait for database to be ready
     max_retries = 30
@@ -22,8 +25,18 @@ def init_db():
     while retry_count < max_retries:
         try:
             # Try to connect to the database
-            connection = engine.connect()
-            connection.close()
+            with engine.connect() as connection:
+                # Create postgres role if it doesn't exist
+                connection.execute(text("""
+                    DO $$ 
+                    BEGIN
+                        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'postgres') THEN
+                            CREATE ROLE postgres WITH LOGIN SUPERUSER PASSWORD 'postgres';
+                        END IF;
+                    END
+                    $$;
+                """))
+                connection.commit()
             print("Database connection successful!")
             break
         except OperationalError:
