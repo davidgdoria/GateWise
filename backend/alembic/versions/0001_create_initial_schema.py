@@ -145,35 +145,6 @@ def upgrade():
         sa.UniqueConstraint("transaction_id")
     )
 
-    # Insert mock data for parking spaces
-    op.execute("""
-        INSERT INTO parking_spaces (name, is_occupied, is_reserved, created_at, updated_at)
-        VALUES 
-            ('A1', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('A2', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('A3', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('B1', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('B2', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('B3', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('C1', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('C2', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('C3', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    """)
-
-    # Insert a default admin user (password: admin123)
-    op.execute("""
-        INSERT INTO users (email, hashed_password, full_name, is_active, is_superuser, created_at, updated_at)
-        VALUES (
-            'admin@example.com',
-            '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-            'Admin User',
-            true,
-            true,
-            CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP
-        )
-    """)
-
 def downgrade():
     op.drop_table("payments")
     op.drop_table("alerts")

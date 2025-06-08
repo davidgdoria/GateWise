@@ -4,13 +4,21 @@ from app.core.security import get_password_hash
 from faker import Faker
 from datetime import datetime, timedelta
 import random
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 fake = Faker()
 
 def seed():
     db = SessionLocal()
     try:
+        logger.info("Starting database seeding...")
+        
         # Optionally: Clear all data first
+        logger.info("Clearing existing data...")
         db.query(Alert).delete()
         db.query(Notification).delete()
         db.query(Payment).delete()
@@ -20,8 +28,10 @@ def seed():
         db.query(User).delete()
         db.query(ParkingSpace).delete()
         db.commit()
+        logger.info("Existing data cleared successfully")
 
         # Create admin user
+        logger.info("Creating admin user...")
         admin = User(
             email='admin@gatewise.com',
             hashed_password=get_password_hash("admin123"),
@@ -31,10 +41,12 @@ def seed():
         )
         db.add(admin)
         db.commit()
+        logger.info("Admin user created successfully")
 
         # Create 50 residents
+        logger.info("Creating residents...")
         residents = []
-        for _ in range(50):
+        for i in range(50):
             resident = User(
                 email=fake.email(),
                 hashed_password=get_password_hash("resident123"),
@@ -45,8 +57,10 @@ def seed():
             db.add(resident)
             residents.append(resident)
         db.commit()
+        logger.info(f"Created {len(residents)} residents successfully")
 
         # Create parking spaces
+        logger.info("Creating parking spaces...")
         parking_spaces = []
         for row in ['A', 'B', 'C', 'D', 'E']:
             for num in range(1, 4):
@@ -59,8 +73,14 @@ def seed():
                 db.add(space)
                 parking_spaces.append(space)
         db.commit()
+        logger.info(f"Created {len(parking_spaces)} parking spaces successfully")
+        
+        # Fetch all parking spaces from the DB to ensure correct IDs
+        parking_spaces = db.query(ParkingSpace).all()
+        logger.info(f"Retrieved {len(parking_spaces)} parking spaces from database")
 
         # Create vehicles
+        logger.info("Creating vehicles...")
         vehicle_makes = ["Toyota", "Honda", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi", "Tesla", "Hyundai", "Kia"]
         vehicle_models = {
             "Toyota": ["Camry", "Corolla", "RAV4", "Highlander"],
@@ -92,8 +112,10 @@ def seed():
                 db.add(vehicle)
                 vehicles.append(vehicle)
         db.commit()
+        logger.info(f"Created {len(vehicles)} vehicles successfully")
 
         # Create parking records
+        logger.info("Creating parking records...")
         for vehicle in vehicles:
             num_records = random.randint(1, 5)
             for _ in range(num_records):
@@ -103,24 +125,48 @@ def seed():
                 fee = round(duration * 0.5, 2)  # $0.50 per minute
                 # Assign a random parking space
                 space = random.choice(parking_spaces)
-                parking_record = ParkingRecord(
-                    vehicle_id=vehicle.id,
-                    space_id=space.id,
-                    entry_time=entry_time,
-                    exit_time=exit_time,
-                    duration_minutes=int(duration),
-                    fee=fee,
-                    is_paid=random.choice([True, False]),
-                    entry_image_path=f"images/entry_{vehicle.id}_{entry_time.strftime('%Y%m%d_%H%M%S')}.jpg",
-                    exit_image_path=f"images/exit_{vehicle.id}_{exit_time.strftime('%Y%m%d_%H%M%S')}.jpg",
-                    confidence_score=random.uniform(0.8, 1.0)
-                )
-                db.add(parking_record)
-                # Update parking space status
-                space.is_occupied = True
-        db.commit()
+                try:
+                    # Create parking record using raw SQL
+                    db.execute(
+                        """
+                        INSERT INTO parking_records 
+                        (vehicle_id, space_id, entry_time, exit_time, duration_minutes, fee, is_paid, 
+                        entry_image_path, exit_image_path, confidence_score, created_at, updated_at)
+                        VALUES 
+                        (:vehicle_id, :space_id, :entry_time, :exit_time, :duration_minutes, :fee, :is_paid,
+                        :entry_image_path, :exit_image_path, :confidence_score, :created_at, :updated_at)
+                        """,
+                        {
+                            "vehicle_id": vehicle.id,
+                            "space_id": space.id,
+                            "entry_time": entry_time,
+                            "exit_time": exit_time,
+                            "duration_minutes": int(duration),
+                            "fee": fee,
+                            "is_paid": random.choice([True, False]),
+                            "entry_image_path": f"images/entry_{vehicle.id}_{entry_time.strftime('%Y%m%d_%H%M%S')}.jpg",
+                            "exit_image_path": f"images/exit_{vehicle.id}_{exit_time.strftime('%Y%m%d_%H%M%S')}.jpg",
+                            "confidence_score": random.uniform(0.8, 1.0),
+                            "created_at": datetime.utcnow(),
+                            "updated_at": datetime.utcnow()
+                        }
+                    )
+                    
+                    # Update parking space status
+                    space.is_occupied = True
+                    db.flush()  # Flush the space update
+                    
+                    # Commit both changes
+                    db.commit()
+                    logger.info(f"Created parking record for vehicle {vehicle.id} in space {space.id}")
+                except Exception as e:
+                    logger.error(f"Error creating parking record: {str(e)}")
+                    db.rollback()
+                    raise e
+        logger.info("Parking records created successfully")
 
         # Create subscriptions
+        logger.info("Creating subscriptions...")
         subscription_types = ["MONTHLY", "QUARTERLY", "ANNUAL"]
         for vehicle in vehicles:
             num_subscriptions = random.randint(1, 3)
@@ -140,8 +186,10 @@ def seed():
                 )
                 db.add(subscription)
         db.commit()
+        logger.info("Subscriptions created successfully")
 
         # Create payments
+        logger.info("Creating payments...")
         payment_statuses = ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]
         payment_methods = ["credit_card", "debit_card", "bank_transfer"]
         for subscription in db.query(Subscription).all():
@@ -157,8 +205,10 @@ def seed():
                 )
                 db.add(payment)
         db.commit()
+        logger.info("Payments created successfully")
 
         # Create notifications
+        logger.info("Creating notifications...")
         notification_types = ["SYSTEM", "PAYMENT", "PARKING", "SECURITY"]
         for resident in residents:
             num_notifications = random.randint(3, 10)
@@ -171,8 +221,10 @@ def seed():
                 )
                 db.add(notification)
         db.commit()
+        logger.info("Notifications created successfully")
 
         # Create alerts
+        logger.info("Creating alerts...")
         alert_types = ["prolonged_stay", "unauthorized_entry", "fraud_detection", "system_error"]
         severities = ["low", "medium", "high"]
         for parking_record in db.query(ParkingRecord).all():
@@ -191,8 +243,11 @@ def seed():
                 )
                 db.add(alert)
         db.commit()
+        logger.info("Alerts created successfully")
+        logger.info("Database seeding completed successfully!")
 
     except Exception as e:
+        logger.error(f"Error creating mock data: {str(e)}")
         db.rollback()
         raise e
     finally:
