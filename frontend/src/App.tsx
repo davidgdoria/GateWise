@@ -19,6 +19,8 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ContactUsInternal from './pages/ContactUsInternal';
 import Help from './pages/Help';
+import Parking from './pages/Parking';
+import Statistics from './pages/Statistics';
 
 const queryClient = new QueryClient();
 
@@ -119,6 +121,8 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/parking" element={<Parking />} />
+            <Route path="/statistics" element={<Statistics />} />
             
             {/* Redirect to landing page for unknown routes */}
             <Route path="*" element={<Navigate to="/" replace />} />

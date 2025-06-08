@@ -1,5 +1,5 @@
 from app.db.session import SessionLocal
-from app.models import User, Vehicle, ParkingRecord, Subscription, Payment, Notification, Alert
+from app.models import User, Vehicle, ParkingRecord, Subscription, Payment, Notification, Alert, ParkingSpace
 from app.core.security import get_password_hash
 from faker import Faker
 from datetime import datetime, timedelta
@@ -18,6 +18,7 @@ def seed():
         db.query(ParkingRecord).delete()
         db.query(Vehicle).delete()
         db.query(User).delete()
+        db.query(ParkingSpace).delete()
         db.commit()
 
         # Create admin user
@@ -43,6 +44,20 @@ def seed():
             )
             db.add(resident)
             residents.append(resident)
+        db.commit()
+
+        # Create parking spaces
+        parking_spaces = []
+        for row in ['A', 'B', 'C', 'D', 'E']:
+            for num in range(1, 4):
+                name = f"{row}{num}"
+                space = ParkingSpace(
+                    name=name,
+                    is_occupied=False,
+                    is_reserved=False
+                )
+                db.add(space)
+                parking_spaces.append(space)
         db.commit()
 
         # Create vehicles
@@ -86,8 +101,11 @@ def seed():
                 exit_time = entry_time + timedelta(hours=random.randint(1, 48))
                 duration = (exit_time - entry_time).total_seconds() / 60
                 fee = round(duration * 0.5, 2)  # $0.50 per minute
+                # Assign a random parking space
+                space = random.choice(parking_spaces)
                 parking_record = ParkingRecord(
                     vehicle_id=vehicle.id,
+                    space_id=space.id,
                     entry_time=entry_time,
                     exit_time=exit_time,
                     duration_minutes=int(duration),
@@ -98,6 +116,8 @@ def seed():
                     confidence_score=random.uniform(0.8, 1.0)
                 )
                 db.add(parking_record)
+                # Update parking space status
+                space.is_occupied = True
         db.commit()
 
         # Create subscriptions

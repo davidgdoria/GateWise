@@ -36,11 +36,24 @@ class Vehicle(Base):
     parking_records = relationship("ParkingRecord", back_populates="vehicle")
     subscriptions = relationship("Subscription", back_populates="vehicle")
 
+class ParkingSpace(Base):
+    __tablename__ = "parking_spaces"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    is_occupied = Column(Boolean, default=False)
+    is_reserved = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    parking_records = relationship("ParkingRecord", back_populates="space")
+
 class ParkingRecord(Base):
     __tablename__ = "parking_records"
 
     id = Column(Integer, primary_key=True, index=True)
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"))
+    space_id = Column(Integer, ForeignKey("parking_spaces.id"))
     entry_time = Column(DateTime, default=datetime.utcnow)
     exit_time = Column(DateTime, nullable=True)
     duration_minutes = Column(Integer, nullable=True)
@@ -49,8 +62,11 @@ class ParkingRecord(Base):
     entry_image_path = Column(String, nullable=True)
     exit_image_path = Column(String, nullable=True)
     confidence_score = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     vehicle = relationship("Vehicle", back_populates="parking_records")
+    space = relationship("ParkingSpace", back_populates="parking_records")
 
 class User(Base):
     __tablename__ = "users"

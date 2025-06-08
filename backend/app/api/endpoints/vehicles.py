@@ -1,16 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from app.db.session import get_db
 from app.models.models import Vehicle, ParkingRecord, Alert
 from app.services.ocr_service import OCRService
 from app.services.camera_service import CameraService
+from app.api import deps
+from app.schemas.vehicle import VehicleCreate, VehicleResponse, VehicleUpdate
+from app.schemas.parking import ParkingRecordResponse
+from app.services.api_service import APIService
 
 router = APIRouter()
 ocr_service = OCRService()
 camera_service = CameraService()
+api_service = APIService()
 
 @router.post("/entry")
 async def vehicle_entry(db: Session = Depends(get_db)):
@@ -154,4 +159,106 @@ async def vehicle_exit(db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
-        ) 
+        )
+
+@router.get("/", response_model=List[VehicleResponse])
+async def get_vehicles(
+    skip: int = 0,
+    limit: int = 100,
+    plate_text: Optional[str] = None,
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_user)
+):
+    """Get list of vehicles with optional filtering."""
+    try:
+        if plate_text:
+            vehicles = db.query(Vehicle).filter(Vehicle.plate_text.ilike(f"%{plate_text}%")).offset(skip).limit(limit).all()
+        else:
+            vehicles = db.query(Vehicle).offset(skip).limit(limit).all()
+        return vehicles
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{vehicle_id}", response_model=VehicleResponse)
+async def get_vehicle(
+    vehicle_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_user)
+):
+    """Get vehicle by ID."""
+    vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    return vehicle
+
+@router.get("/{vehicle_id}/history", response_model=List[ParkingRecordResponse])
+async def get_vehicle_history(
+    vehicle_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_user)
+):
+    """Get parking history for a vehicle."""
+    records = db.query(ParkingRecord).filter(
+        ParkingRecord.vehicle_id == vehicle_id
+    ).order_by(ParkingRecord.entry_time.desc()).offset(skip).limit(limit).all()
+    return records
+
+@router.post("/", response_model=VehicleResponse)
+async def create_vehicle(
+    vehicle: VehicleCreate,
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_user)
+):
+    """Create a new vehicle."""
+    try:
+        db_vehicle = Vehicle(**vehicle.dict())
+        db.add(db_vehicle)
+        db.commit()
+        db.refresh(db_vehicle)
+        return db_vehicle
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/{vehicle_id}", response_model=VehicleResponse)
+async def update_vehicle(
+    vehicle_id: int,
+    vehicle: VehicleUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_user)
+):
+    """Update vehicle information."""
+    db_vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not db_vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    try:
+        for key, value in vehicle.dict(exclude_unset=True).items():
+            setattr(db_vehicle, key, value)
+        db.commit()
+        db.refresh(db_vehicle)
+        return db_vehicle
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{vehicle_id}")
+async def delete_vehicle(
+    vehicle_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_superuser)
+):
+    """Delete a vehicle (superuser only)."""
+    db_vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not db_vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    try:
+        db.delete(db_vehicle)
+        db.commit()
+        return {"message": "Vehicle deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e)) 

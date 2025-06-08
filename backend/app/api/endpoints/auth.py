@@ -1,169 +1,141 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from app import crud, models, schemas
-from app.api import deps
-from app.core import security
+from pydantic import BaseModel, EmailStr
+
 from app.core.config import settings
-from app.core.security_middleware import SecurityMiddleware
+from app.api import deps
+from app.models.user import User
+from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()
-security_middleware = SecurityMiddleware()
 
-@router.post("/login/access-token", response_model=schemas.Token)
-def login_access_token(
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+# Token schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    expires_at: datetime
+
+class TokenData(BaseModel):
+    email: str | None = None
+
+# Helper functions
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(
     db: Session = Depends(deps.get_db),
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    request: Request = None
-) -> Any:
-    """
-    OAuth2 compatible token login, get an access token for future requests
-    """
-    user = crud.user.authenticate(
-        db, username=form_data.username, password=form_data.password
+    token: str = Depends(oauth2_scheme)
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
-    if not user:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = TokenData(email=email)
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(User).filter(User.email == token_data.email).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+# Endpoints
+@router.post("/login", response_model=Token)
+async def login(
+    db: Session = Depends(deps.get_db),
+    form_data: OAuth2PasswordRequestForm = Depends()
+) -> Any:
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-    elif not crud.user.is_active(user):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Create access and refresh tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    
-    access_token = security.create_access_token(
-        user.id, expires_delta=access_token_expires
-    )
-    refresh_token = security.create_refresh_token(
-        user.id, expires_delta=refresh_token_expires
-    )
-    
-    # Store session information
-    device_info = request.headers.get("User-Agent", "Unknown")
-    ip_address = request.client.host
-    
-    crud.session.create_session(
-        db,
-        user_id=user.id,
-        access_token=access_token,
-        refresh_token=refresh_token,
-        device_info=device_info,
-        ip_address=ip_address
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,
         "token_type": "bearer",
-        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        "expires_at": datetime.utcnow() + access_token_expires
     }
 
-@router.post("/refresh-token", response_model=schemas.Token)
-def refresh_token(
+@router.post("/register", response_model=UserResponse)
+async def register(
+    *,
     db: Session = Depends(deps.get_db),
-    refresh_token: schemas.RefreshToken = None
+    user_in: UserCreate,
 ) -> Any:
-    """
-    Refresh access token using refresh token
-    """
-    payload = security.verify_token(refresh_token.refresh_token)
-    if not payload or payload.get("type") != "refresh":
+    user = db.query(User).filter(User.email == user_in.email).first()
+    if user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
         )
     
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
-        )
-    
-    # Create new tokens
+    user = User(
+        email=user_in.email,
+        hashed_password=get_password_hash(user_in.password),
+        full_name=user_in.full_name,
+        is_active=True,
+        is_superuser=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(
+    current_user: User = Depends(get_current_user),
+) -> Any:
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    new_refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    
-    new_access_token = security.create_access_token(
-        user_id, expires_delta=access_token_expires
-    )
-    new_refresh_token = security.create_refresh_token(
-        user_id, expires_delta=new_refresh_token_expires
-    )
-    
-    # Update session
-    crud.session.update_session(
-        db,
-        old_refresh_token=refresh_token.refresh_token,
-        new_access_token=new_access_token,
-        new_refresh_token=new_refresh_token
+    access_token = create_access_token(
+        data={"sub": current_user.email}, expires_delta=access_token_expires
     )
     
     return {
-        "access_token": new_access_token,
-        "refresh_token": new_refresh_token,
+        "access_token": access_token,
         "token_type": "bearer",
-        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        "expires_at": datetime.utcnow() + access_token_expires
     }
 
-@router.post("/password-reset/request", response_model=schemas.Msg)
-def request_password_reset(
-    email: str,
-    db: Session = Depends(deps.get_db)
-) -> Any:
-    """
-    Request password reset
-    """
-    user = crud.user.get_by_email(db, email=email)
-    if user:
-        reset_token = security.generate_password_reset_token()
-        crud.user.update_password_reset_token(db, user=user, token=reset_token)
-        # TODO: Send email with reset token
-        # For now, just return success
-        return {"msg": "If the email exists, a password reset link has been sent"}
-    return {"msg": "If the email exists, a password reset link has been sent"}
-
-@router.post("/password-reset/verify", response_model=schemas.Msg)
-def verify_password_reset(
-    token: str,
-    new_password: str,
-    db: Session = Depends(deps.get_db)
-) -> Any:
-    """
-    Verify password reset token and set new password
-    """
-    user = crud.user.get_by_reset_token(db, token=token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid reset token"
-        )
-    
-    crud.user.update_password(db, user=user, new_password=new_password)
-    return {"msg": "Password updated successfully"}
-
 @router.post("/logout")
-def logout(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_user),
-    token: str = Depends(deps.get_current_token)
+async def logout(
+    current_user: User = Depends(get_current_user),
 ) -> Any:
-    """
-    Logout user and invalidate session
-    """
-    crud.session.invalidate_session(db, token=token)
-    return {"msg": "Successfully logged out"}
-
-@router.post("/login/test-token", response_model=schemas.User)
-def test_token(current_user: models.User = Depends(deps.get_current_user)) -> Any:
-    """
-    Test access token
-    """
-    return current_user 
+    # In a real application, you might want to blacklist the token
+    # For now, we'll just return a success message
+    return {"message": "Successfully logged out"} 

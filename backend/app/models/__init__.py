@@ -1,4 +1,4 @@
-from app.models.models import User, Vehicle, ParkingRecord, Alert, Subscription, Payment, Notification
+from app.models.models import User, Vehicle, ParkingRecord, Alert, Subscription, Payment, Notification, ParkingSpace
 
 __all__ = [
     "User",
@@ -7,5 +7,6 @@ __all__ = [
     "Alert",
     "Subscription",
     "Payment",
-    "Notification"
+    "Notification",
+    "ParkingSpace"
 ] 
