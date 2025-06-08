@@ -27,6 +27,8 @@ import {
   HelpOutline as HelpIcon,
   ContactMail as ContactIcon,
   Logout as LogoutIcon,
+  People as PeopleIcon,
+  LocalParking as ParkingIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 200;
@@ -45,6 +47,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
     { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
+    { text: 'Users', icon: <PeopleIcon />, path: '/users' },
+    { text: 'Parking Spaces', icon: <ParkingIcon />, path: '/parking-spaces' },
   ];
 
   return (
