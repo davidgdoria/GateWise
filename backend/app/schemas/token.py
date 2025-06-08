@@ -9,7 +9,7 @@ class Token(BaseModel):
     expires_in: int
 
 class TokenPayload(BaseModel):
-    sub: Optional[int] = None
+    sub: Optional[str] = None
     exp: Optional[datetime] = None
     type: Optional[str] = None
 

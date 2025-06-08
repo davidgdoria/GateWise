@@ -9,7 +9,7 @@ import os
 class CameraService:
     def __init__(self):
         self.device_id = settings.CAMERA_DEVICE_ID
-        self.resolution = settings.CAMERA_RESOLUTION
+        self.resolution = (settings.CAMERA_RESOLUTION_WIDTH, settings.CAMERA_RESOLUTION_HEIGHT)
         self.camera = None
         self.is_initialized = False
 

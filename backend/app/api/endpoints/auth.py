@@ -9,7 +9,7 @@ from pydantic import BaseModel, EmailStr
 
 from app.core.config import settings
 from app.api import deps
-from app.models.user import User
+from app.models.models import User
 from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()

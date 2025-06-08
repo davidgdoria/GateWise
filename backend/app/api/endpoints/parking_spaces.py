@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.parking_space import ParkingSpace
+from app.models.models import ParkingSpace
 from app.schemas.parking_space import ParkingSpaceCreate, ParkingSpaceUpdate, ParkingSpaceResponse
 
 router = APIRouter()

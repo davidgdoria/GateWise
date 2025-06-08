@@ -5,6 +5,7 @@ from faker import Faker
 from datetime import datetime, timedelta
 import random
 import logging
+from sqlalchemy import text
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -128,14 +129,14 @@ def seed():
                 try:
                     # Create parking record using raw SQL
                     db.execute(
-                        """
+                        text("""
                         INSERT INTO parking_records 
                         (vehicle_id, space_id, entry_time, exit_time, duration_minutes, fee, is_paid, 
                         entry_image_path, exit_image_path, confidence_score, created_at, updated_at)
                         VALUES 
                         (:vehicle_id, :space_id, :entry_time, :exit_time, :duration_minutes, :fee, :is_paid,
                         :entry_image_path, :exit_image_path, :confidence_score, :created_at, :updated_at)
-                        """,
+                        """),
                         {
                             "vehicle_id": vehicle.id,
                             "space_id": space.id,
@@ -167,7 +168,7 @@ def seed():
 
         # Create subscriptions
         logger.info("Creating subscriptions...")
-        subscription_types = ["MONTHLY", "QUARTERLY", "ANNUAL"]
+        subscription_types = ["monthly", "quarterly", "annual"]
         for vehicle in vehicles:
             num_subscriptions = random.randint(1, 3)
             for _ in range(num_subscriptions):
@@ -190,7 +191,7 @@ def seed():
 
         # Create payments
         logger.info("Creating payments...")
-        payment_statuses = ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]
+        payment_statuses = ["pending", "completed", "failed", "refunded"]
         payment_methods = ["credit_card", "debit_card", "bank_transfer"]
         for subscription in db.query(Subscription).all():
             num_payments = random.randint(1, 5)
@@ -209,7 +210,7 @@ def seed():
 
         # Create notifications
         logger.info("Creating notifications...")
-        notification_types = ["SYSTEM", "PAYMENT", "PARKING", "SECURITY"]
+        notification_types = ["system", "payment", "parking", "alert"]
         for resident in residents:
             num_notifications = random.randint(3, 10)
             for _ in range(num_notifications):

@@ -5,12 +5,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from app.api import deps
 from app.models.models import ParkingRecord, ParkingSpace
-from app.schemas.parking import (
-    ParkingRecordCreate,
-    ParkingRecordResponse,
-    ParkingSpaceResponse,
-    ParkingSpaceUpdate
-)
+from app.schemas.parking import ParkingRecordCreate, ParkingRecordResponse
+from app.schemas.parking_space import ParkingSpaceResponse, ParkingSpaceUpdate
 from app.services.api_service import APIService
 
 router = APIRouter()

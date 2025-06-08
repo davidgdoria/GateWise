@@ -23,4 +23,5 @@ pytesseract==0.3.10
 pillow==10.1.0
 alembic==1.12.1
 psycopg2-binary==2.9.9
-Faker==22.6.0 
+Faker==22.6.0
+psutil

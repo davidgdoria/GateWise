@@ -20,6 +20,7 @@ class NotificationType(enum.Enum):
     SUBSCRIPTION = "subscription"
     ALERT = "alert"
     SYSTEM = "system"
+    PARKING = "parking"
 
 class Vehicle(Base):
     __tablename__ = "vehicles"

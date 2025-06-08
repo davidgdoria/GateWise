@@ -2,14 +2,15 @@ from typing import Any, List
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from app import crud, models, schemas
+from app import crud, models
+from app.schemas.user import UserResponse, UserCreate, UserUpdate, UserInDBBase, UserBase
 from app.api import deps
-from app.models.user import User
+from app.models.models import User
 from app.core.security import get_password_hash
 
 router = APIRouter()
 
-@router.get("/", response_model=List[schemas.User])
+@router.get("/", response_model=List[UserResponse])
 def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -22,11 +23,11 @@ def read_users(
     users = crud.user.get_multi(db, skip=skip, limit=limit)
     return users
 
-@router.post("/", response_model=schemas.User)
+@router.post("/", response_model=UserResponse)
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
+    user_in: UserCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
@@ -47,11 +48,11 @@ def create_user(
     user = crud.user.create(db, obj_in=user_in)
     return user
 
-@router.put("/me", response_model=schemas.User)
+@router.put("/me", response_model=UserResponse)
 def update_user_me(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserUpdate,
+    user_in: UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -60,7 +61,7 @@ def update_user_me(
     user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
-@router.get("/me", response_model=schemas.User)
+@router.get("/me", response_model=UserResponse)
 def read_user_me(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
@@ -69,7 +70,7 @@ def read_user_me(
     """
     return current_user
 
-@router.get("/{user_id}", response_model=schemas.User)
+@router.get("/{user_id}", response_model=UserResponse)
 def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -92,12 +93,12 @@ def read_user_by_id(
         )
     return user
 
-@router.put("/{user_id}", response_model=schemas.User)
+@router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
-    user_in: schemas.UserUpdate,
+    user_in: UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
@@ -112,7 +113,7 @@ def update_user(
     user = crud.user.update(db, db_obj=user, obj_in=user_in)
     return user
 
-@router.get("/", response_model=List[schemas.User])
+@router.get("/", response_model=List[UserResponse])
 async def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -130,11 +131,11 @@ async def read_users(
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 
-@router.put("/me", response_model=schemas.User)
+@router.put("/me", response_model=UserResponse)
 async def update_user_me(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserUpdate,
+    user_in: UserUpdate,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
@@ -161,7 +162,7 @@ async def update_user_me(
     db.refresh(current_user)
     return current_user
 
-@router.get("/{user_id}", response_model=schemas.User)
+@router.get("/{user_id}", response_model=UserResponse)
 async def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(deps.get_current_user),
@@ -185,12 +186,12 @@ async def read_user_by_id(
         )
     return user
 
-@router.put("/{user_id}", response_model=schemas.User)
+@router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
-    user_in: schemas.UserUpdate,
+    user_in: UserUpdate,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
