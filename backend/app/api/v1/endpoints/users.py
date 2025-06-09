@@ -1,0 +1,112 @@
+from fastapi import APIRouter, Depends, HTTPException
+from app.models.schemas import Token
+from app.models.user import User, UserType
+from app.db.session import get_db
+from sqlalchemy.future import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from passlib.context import CryptContext
+from app.core.security import verify_token
+from typing import List
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
+from fastapi import status
+from app.core.config import get_settings
+settings = get_settings()
+
+router = APIRouter()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Dependency to check admin
+async def admin_required(username: str = Depends(verify_token), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.username == username))
+    user = result.scalar_one_or_none()
+    if not user or user.type != UserType.admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return user
+
+from pydantic import BaseModel
+import secrets
+import string
+
+from app.core.email import send_email_gmail
+
+def send_email(to_email: str, subject: str, body: str):
+    send_email_gmail(to_email, subject, body)
+
+class UserCreate(BaseModel):
+    username: str
+    full_name: str
+    email: str
+    type: str = "user"
+
+@router.post("/", status_code=201)
+async def create_user(
+    user: UserCreate,
+    _: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.username == user.username))
+    exists = result.scalar_one_or_none()
+    if exists:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    result = await db.execute(select(User).where(User.email == user.email))
+    email_exists = result.scalar_one_or_none()
+    if email_exists:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    # User is created with a random password, but must reset it
+    password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+    u = User(
+        username=user.username,
+        full_name=user.full_name,
+        email=user.email,
+        hashed_password=pwd_context.hash(password),
+        type=user.type
+    )
+    db.add(u)
+    await db.commit()
+    await db.refresh(u)
+    # Generate reset token
+    expire = datetime.utcnow() + timedelta(hours=1)
+    token = jwt.encode({"sub": str(u.id), "exp": expire}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    reset_link = f"https://your-frontend-app.com/reset-password?token={token}"
+    send_email(u.email, "Set your password", f"Hello {u.full_name}, set your password here: {reset_link}")
+    return {"id": u.id, "username": u.username, "full_name": u.full_name, "email": u.email, "type": u.type}
+
+@router.post("/{user_id}/reset-password-token", status_code=200)
+async def generate_reset_token(
+    user_id: int,
+    _: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    expire = datetime.utcnow() + timedelta(hours=1)
+    token = jwt.encode({"sub": str(user.id), "exp": expire}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    reset_link = f"https://your-frontend-app.com/reset-password?token={token}"
+    send_email(user.email, "Password reset link", f"Hello {user.full_name}, reset your password here: {reset_link}")
+    return {"msg": "Password reset link sent"}
+
+from pydantic import BaseModel
+class PasswordResetRequest(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/reset-password", status_code=200)
+async def reset_password(
+    data: PasswordResetRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        payload = jwt.decode(data.token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id = int(payload.get("sub"))
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.hashed_password = pwd_context.hash(data.new_password)
+    await db.commit()
+    return {"msg": "Password reset successful"}
