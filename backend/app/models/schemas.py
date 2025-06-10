@@ -8,6 +8,7 @@ class LoginRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    type: str
 
 class VehicleCreate(BaseModel):
     license_plate: str
