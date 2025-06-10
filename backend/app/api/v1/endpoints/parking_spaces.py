@@ -67,3 +67,17 @@ async def update_parking_space(
     await db.commit()
     await db.refresh(parking_space)
     return parking_space
+
+@router.delete("/{parking_space_id}", status_code=204)
+async def delete_parking_space(
+    parking_space_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(admin_required)
+):
+    result = await db.execute(select(ParkingSpace).where(ParkingSpace.id == parking_space_id))
+    parking_space = result.scalar_one_or_none()
+    if not parking_space:
+        raise HTTPException(status_code=404, detail="Parking space not found")
+    await db.delete(parking_space)
+    await db.commit()
+    return None
