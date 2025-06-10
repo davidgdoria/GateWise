@@ -21,6 +21,12 @@ class VehicleUpdate(BaseModel):
     model: str | None = None
     color: str | None = None
 
+class ParkingSpaceUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    is_allocated: bool | None = None
+    is_occupied: bool | None = None
+
 class ParkingSpaceOut(BaseModel):
     id: int
     name: str

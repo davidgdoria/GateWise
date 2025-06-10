@@ -6,7 +6,7 @@ from app.db.session import get_db
 from app.models.user import User, UserType
 from pydantic import BaseModel
 from fastapi_pagination import Page, paginate
-from app.models.schemas import ParkingSpaceOut
+from app.models.schemas import ParkingSpaceOut, ParkingSpaceUpdate
 
 router = APIRouter()
 
@@ -48,3 +48,21 @@ async def list_parking_spaces(
     result = await db.execute(select(ParkingSpace))
     parking_spaces = result.scalars().all()
     return paginate(parking_spaces)
+
+@router.patch("/{parking_space_id}", response_model=ParkingSpaceOut)
+async def update_parking_space(
+    parking_space_id: int,
+    update: ParkingSpaceUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(admin_required)
+):
+    result = await db.execute(select(ParkingSpace).where(ParkingSpace.id == parking_space_id))
+    parking_space = result.scalar_one_or_none()
+    if not parking_space:
+        raise HTTPException(status_code=404, detail="Parking space not found")
+    update_data = update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(parking_space, field, value)
+    await db.commit()
+    await db.refresh(parking_space)
+    return parking_space
