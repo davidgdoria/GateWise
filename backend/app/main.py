@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.requests import Request
 from datetime import datetime
 import uvicorn
 from app.api.api import api_router
@@ -106,6 +107,17 @@ async def health_check():
             },
             status_code=500
         )
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(request: Request):
+    response = JSONResponse(content={"message": "CORS preflight"})
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = request.headers.get("access-control-request-headers", "*")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 

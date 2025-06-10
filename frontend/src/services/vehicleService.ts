@@ -1,4 +1,6 @@
 import { apiClient } from './api';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export interface Vehicle {
   id: number;
@@ -31,25 +33,28 @@ export interface ParkingRecord {
 }
 
 class VehicleService {
-  async getVehicles(skip = 0, limit = 100, plateText?: string): Promise<Vehicle[]> {
+  async getVehicles(skip = 0, limit = 100, plateText?: string): Promise<{ items: Vehicle[], total: number }> {
+    const token = Cookies.get('access_token');
     const params = new URLSearchParams();
     params.append('skip', skip.toString());
     params.append('limit', limit.toString());
     if (plateText) {
       params.append('plate_text', plateText);
     }
-    return apiClient.get<Vehicle[]>(`/vehicles?${params.toString()}`);
+    return apiClient.get<{ items: Vehicle[], total: number }>(`/vehicles/?${params.toString()}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
   }
 
   async getVehicle(id: number): Promise<Vehicle> {
-    return apiClient.get<Vehicle>(`/vehicles/${id}`);
+    return apiClient.get<Vehicle>(`/vehicles/${id}/`);
   }
 
   async getVehicleHistory(id: number, skip = 0, limit = 100): Promise<ParkingRecord[]> {
     const params = new URLSearchParams();
     params.append('skip', skip.toString());
     params.append('limit', limit.toString());
-    return apiClient.get<ParkingRecord[]>(`/vehicles/${id}/history?${params.toString()}`);
+    return apiClient.get<ParkingRecord[]>(`/vehicles/${id}/history/?${params.toString()}`);
   }
 
   async createVehicle(data: VehicleCreate): Promise<Vehicle> {

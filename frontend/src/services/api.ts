@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import Cookies from 'js-cookie';
 
 declare global {
   interface Window {
@@ -8,14 +9,14 @@ declare global {
   }
 }
 
-const API_URL = window.env?.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 class ApiClient {
   private client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_URL,
+      baseURL: API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -23,8 +24,8 @@ class ApiClient {
 
     // Add request interceptor for authentication
     this.client.interceptors.request.use(
-      (config: AxiosRequestConfig) => {
-        const token = localStorage.getItem('token');
+      (config: InternalAxiosRequestConfig) => {
+        const token = Cookies.get('access_token');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -41,8 +42,8 @@ class ApiClient {
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           // Handle unauthorized access
-          localStorage.removeItem('token');
-          window.location.href = '/login';
+          Cookies.remove('access_token');
+          // window.location.href = '/login'; // <-- commented out to disable auto-redirect
         }
         return Promise.reject(error);
       }
@@ -74,20 +75,20 @@ export const apiClient = new ApiClient();
 
 // Vehicle endpoints
 export const vehicleApi = {
-  getVehicles: () => apiClient.get('/vehicles'),
-  getVehicle: (id: number) => apiClient.get(`/vehicles/${id}`),
-  createVehicle: (data: any) => apiClient.post('/vehicles', data),
-  updateVehicle: (id: number, data: any) => apiClient.put(`/vehicles/${id}`, data),
-  deleteVehicle: (id: number) => apiClient.delete(`/vehicles/${id}`),
+  getVehicles: () => apiClient.get('/vehicles/'),
+  getVehicle: (id: number) => apiClient.get(`/vehicles/${id}/`),
+  createVehicle: (data: any) => apiClient.post('/vehicles/', data),
+  updateVehicle: (id: number, data: any) => apiClient.put(`/vehicles/${id}/`, data),
+  deleteVehicle: (id: number) => apiClient.delete(`/vehicles/${id}/`),
 };
 
 // Parking records endpoints
-export const parkingApi = {
-  getParkingRecords: () => apiClient.get('/parking-records'),
-  getParkingRecord: (id: number) => apiClient.get(`/parking-records/${id}`),
-  createParkingRecord: (data: any) => apiClient.post('/parking-records', data),
-  updateParkingRecord: (id: number, data: any) => apiClient.put(`/parking-records/${id}`, data),
-};
+// export const parkingApi = {
+//   getParkingRecords: () => apiClient.get('/parking-records'),
+//   getParkingRecord: (id: number) => apiClient.get(`/parking-records/${id}`),
+//   createParkingRecord: (data: any) => apiClient.post('/parking-records', data),
+//   updateParkingRecord: (id: number, data: any) => apiClient.put(`/parking-records/${id}`, data),
+// };
 
 // Alerts endpoints
 export const alertApi = {
@@ -96,11 +97,4 @@ export const alertApi = {
   createAlert: (data: any) => apiClient.post('/alerts', data),
   updateAlert: (id: number, data: any) => apiClient.put(`/alerts/${id}`, data),
   resolveAlert: (id: number) => apiClient.post(`/alerts/${id}/resolve`),
-};
-
-// Statistics endpoints
-export const statsApi = {
-  getDashboardStats: () => apiClient.get('/stats/dashboard'),
-  getOccupancyTrend: (period: string) => apiClient.get(`/stats/occupancy?period=${period}`),
-  getVehicleStats: () => apiClient.get('/stats/vehicles'),
 }; 

@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { LockOutlined as LockIcon } from '@mui/icons-material';
 import authService from '../services/authService';
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -54,7 +55,30 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setError('');
+    setLoading(true);
+
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await authService.login(username, password);
+      if (data.access_token) {
+        Cookies.set('access_token', data.access_token, { expires: 1 });
+        if (data.type) {
+          Cookies.set('user_type', data.type, { expires: 1 });
+        }
+        navigate('/dashboard');
+      } else {
+        setError('Invalid login response');
+      }
+    } catch (err: any) {
+      setError('Invalid username or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Load remembered username on component mount

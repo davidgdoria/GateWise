@@ -1,3 +1,4 @@
+/*
 import { useState, useCallback } from 'react';
 import {
   parkingService,
@@ -100,4 +101,6 @@ export function useParking() {
     createParkingRecord,
     recordVehicleExit,
   };
-} 
+}
+*/
+export {} 

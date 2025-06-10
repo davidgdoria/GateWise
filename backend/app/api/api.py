@@ -1,6 +1,6 @@
 """Main API router."""
 from fastapi import APIRouter
-from app.api.endpoints import auth, users, vehicles, parking, statistics, monitoring, parking_spaces
+from app.api.endpoints import auth, users, vehicles, parking, monitoring, parking_spaces
 
 api_router = APIRouter()
 
@@ -18,9 +18,6 @@ api_router.include_router(parking.router, prefix="/parking", tags=["parking"])
 
 # Parking Spaces endpoints
 api_router.include_router(parking_spaces.router, prefix="/parking-spaces", tags=["parking-spaces"])
-
-# Statistics endpoints
-api_router.include_router(statistics.router, prefix="/statistics", tags=["statistics"])
 
 # Monitoring endpoints
 api_router.include_router(monitoring.router, prefix="/monitoring", tags=["monitoring"]) 

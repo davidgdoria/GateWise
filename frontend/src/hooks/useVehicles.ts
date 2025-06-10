@@ -3,6 +3,7 @@ import { vehicleService, Vehicle, VehicleCreate, VehicleUpdate, ParkingRecord } 
 
 export function useVehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,7 +12,8 @@ export function useVehicles() {
       setLoading(true);
       setError(null);
       const data = await vehicleService.getVehicles(skip, limit, plateText);
-      setVehicles(data);
+      setVehicles(data.items);
+      setTotal(data.total);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch vehicles');
     } finally {
@@ -91,6 +93,7 @@ export function useVehicles() {
 
   return {
     vehicles,
+    total,
     loading,
     error,
     fetchVehicles,

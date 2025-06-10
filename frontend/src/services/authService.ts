@@ -81,7 +81,7 @@ const authService = {
     formData.append('username', username);
     formData.append('password', password);
     
-    const response = await api.post('/login/access-token', formData, {
+    const response = await api.post('/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },

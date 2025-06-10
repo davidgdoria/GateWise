@@ -29,8 +29,6 @@ import {
   Legend,
 } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
-import { useStatistics } from '../hooks/useStatistics';
-import { useParking } from '../hooks/useParking';
 import { useVehicles } from '../hooks/useVehicles';
 
 ChartJS.register(
@@ -82,41 +80,42 @@ const chartOptions = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const {
-    overview,
-    hourlyStats,
-    dailyStats,
-    loading: statsLoading,
-    error: statsError,
-    fetchOverview,
-    fetchHourlyStats,
-    fetchDailyStats,
-  } = useStatistics();
-
-  const {
-    spaces,
-    loading: parkingLoading,
-    error: parkingError,
-    fetchParkingSpaces,
-  } = useParking();
-
+  // Mock data for overview, dailyStats, spaces
+  const overview = {
+    total_entries: 42,
+    total_revenue: 1234.56,
+    average_duration: 45,
+    peak_hours: ['12:00', '18:00'],
+  };
+  const dailyStats = {
+    '2024-06-01': 5,
+    '2024-06-02': 8,
+    '2024-06-03': 12,
+    '2024-06-04': 7,
+    '2024-06-05': 10,
+  };
+  const spaces = [
+    { is_occupied: false },
+    { is_occupied: true },
+    { is_occupied: false },
+    { is_occupied: false },
+    { is_occupied: true },
+  ];
   const {
     vehicles,
+    total,
     loading: vehiclesLoading,
     error: vehiclesError,
     fetchVehicles,
   } = useVehicles();
 
-  useEffect(() => {
-    fetchOverview();
-    fetchParkingSpaces();
+  React.useEffect(() => {
     fetchVehicles();
-    fetchHourlyStats(new Date());
-    fetchDailyStats(new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), new Date());
-  }, [fetchOverview, fetchParkingSpaces, fetchVehicles, fetchHourlyStats, fetchDailyStats]);
+    // All other data is mock
+  }, [fetchVehicles]);
 
-  const loading = statsLoading || parkingLoading || vehiclesLoading;
-  const error = statsError || parkingError || vehiclesError;
+  const loading = vehiclesLoading;
+  const error = vehiclesError;
 
   if (loading) {
     return (
@@ -184,7 +183,7 @@ export default function Dashboard() {
                   <Typography variant="body2" color="#b3c6e0">Active</Typography>
                 </Box>
               </Box>
-              <Typography variant="h3" fontWeight={700}>{vehicles.length}</Typography>
+              <Typography variant="h3" fontWeight={700}>{total}</Typography>
               <Typography variant="body2" color="#b3c6e0">
                 {overview?.total_entries || 0} entries this month
               </Typography>

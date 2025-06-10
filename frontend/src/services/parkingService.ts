@@ -43,11 +43,11 @@ class ParkingService {
     if (isOccupied !== undefined) {
       params.append('is_occupied', isOccupied.toString());
     }
-    return apiClient.get<ParkingSpace[]>(`/parking/spaces?${params.toString()}`);
+    return apiClient.get<ParkingSpace[]>(`/parking/spaces/?${params.toString()}`);
   }
 
   async getParkingSpace(id: number): Promise<ParkingSpace> {
-    return apiClient.get<ParkingSpace>(`/parking/spaces/${id}`);
+    return apiClient.get<ParkingSpace>(`/parking/spaces/${id}/`);
   }
 
   async updateParkingSpace(id: number, data: ParkingSpaceUpdate): Promise<ParkingSpace> {
@@ -69,11 +69,11 @@ class ParkingService {
     if (endDate) {
       params.append('end_date', endDate.toISOString());
     }
-    return apiClient.get<ParkingRecord[]>(`/parking/records?${params.toString()}`);
+    return apiClient.get<ParkingRecord[]>(`/parking/records/?${params.toString()}`);
   }
 
   async getParkingRecord(id: number): Promise<ParkingRecord> {
-    return apiClient.get<ParkingRecord>(`/parking/records/${id}`);
+    return apiClient.get<ParkingRecord>(`/parking/records/${id}/`);
   }
 
   async createParkingRecord(data: ParkingRecordCreate): Promise<ParkingRecord> {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from './theme';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
@@ -19,8 +19,6 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ContactUsInternal from './pages/ContactUsInternal';
 import Help from './pages/Help';
-import Parking from './pages/Parking';
-import Statistics from './pages/Statistics';
 
 const queryClient = new QueryClient();
 
@@ -39,7 +37,7 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<Login />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
@@ -121,8 +119,7 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            <Route path="/parking" element={<Parking />} />
-            <Route path="/statistics" element={<Statistics />} />
+
             
             {/* Redirect to landing page for unknown routes */}
             <Route path="*" element={<Navigate to="/" replace />} />

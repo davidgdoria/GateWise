@@ -168,7 +168,7 @@ def seed():
 
         # Create subscriptions
         logger.info("Creating subscriptions...")
-        subscription_types = ["monthly", "quarterly", "annual"]
+        subscription_types = ["MONTHLY", "QUARTERLY", "ANNUAL"]
         for vehicle in vehicles:
             num_subscriptions = random.randint(1, 3)
             for _ in range(num_subscriptions):
@@ -191,7 +191,7 @@ def seed():
 
         # Create payments
         logger.info("Creating payments...")
-        payment_statuses = ["pending", "completed", "failed", "refunded"]
+        payment_statuses = ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]
         payment_methods = ["credit_card", "debit_card", "bank_transfer"]
         for subscription in db.query(Subscription).all():
             num_payments = random.randint(1, 5)
@@ -210,7 +210,7 @@ def seed():
 
         # Create notifications
         logger.info("Creating notifications...")
-        notification_types = ["system", "payment", "parking", "alert"]
+        notification_types = ["SYSTEM", "PAYMENT", "PARKING", "ALERT"]
         for resident in residents:
             num_notifications = random.randint(3, 10)
             for _ in range(num_notifications):
