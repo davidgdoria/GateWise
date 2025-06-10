@@ -30,6 +30,26 @@ class PlanOut(BaseModel):
     class Config:
         from_attributes = True
 
+class SubscriptionCreate(BaseModel):
+    user_id: int
+    plan_id: int
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    status: str = "active"
+    cancellation_date: datetime | None = None
+
+class SubscriptionOut(BaseModel):
+    id: int
+    user_id: int
+    plan_id: int
+    start_date: datetime
+    end_date: datetime | None = None
+    status: str
+    cancellation_date: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
 class VehicleCreate(BaseModel):
     license_plate: str
     make: str
