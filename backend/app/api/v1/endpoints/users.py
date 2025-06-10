@@ -8,6 +8,10 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 from app.core.security import verify_token
+from jose import jwt
+from app.models.token_blacklist import TokenBlacklist
+from app.core.config import get_settings
+settings = get_settings()
 from typing import List
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
@@ -92,6 +96,26 @@ async def list_users(
     result = await db.execute(select(User))
     users = result.scalars().all()
     return paginate(users)
+
+from fastapi import Request
+
+@router.post("/logout", status_code=200)
+async def logout_user(request: Request, db: AsyncSession = Depends(get_db)):
+    auth = request.headers.get("authorization")
+    if not auth or not auth.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="No token provided")
+    token = auth.split(" ", 1)[1]
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        jti = payload.get("jti")
+        if not jti:
+            raise HTTPException(status_code=400, detail="Token missing jti claim")
+        tb = TokenBlacklist(jti=jti, token=token)
+        db.add(tb)
+        await db.commit()
+        return {"msg": "Logout successful"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid token: {str(e)}")
 
 @router.post("/{user_id}/reset-password-token", status_code=200)
 async def generate_reset_token(
