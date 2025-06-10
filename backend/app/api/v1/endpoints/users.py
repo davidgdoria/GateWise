@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.schemas import Token
+from pydantic import BaseModel
+from fastapi_pagination import Page, paginate
 from app.models.user import User, UserType
 from app.db.session import get_db
 from sqlalchemy.future import select
@@ -32,6 +34,16 @@ from app.core.email import send_email_gmail
 
 def send_email(to_email: str, subject: str, body: str):
     send_email_gmail(to_email, subject, body)
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    full_name: str
+    email: str
+    type: str
+
+    class Config:
+        from_attributes = True
 
 class UserCreate(BaseModel):
     username: str
@@ -71,6 +83,15 @@ async def create_user(
     reset_link = f"https://your-frontend-app.com/reset-password?token={token}"
     send_email(u.email, "Set your password", f"Hello {u.full_name}, set your password here: {reset_link}")
     return {"id": u.id, "username": u.username, "full_name": u.full_name, "email": u.email, "type": u.type}
+
+@router.get("/", response_model=Page[UserOut])
+async def list_users(
+    _: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User))
+    users = result.scalars().all()
+    return paginate(users)
 
 @router.post("/{user_id}/reset-password-token", status_code=200)
 async def generate_reset_token(
