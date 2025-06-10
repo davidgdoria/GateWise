@@ -10,6 +10,26 @@ class Token(BaseModel):
     token_type: str
     type: str
 
+class PlanCreate(BaseModel):
+    name: str
+    price: float
+    num_spaces: int
+    description: str | None = None
+    duration_days: int
+    active: int = 1
+
+class PlanOut(BaseModel):
+    id: int
+    name: str
+    price: float
+    num_spaces: int
+    description: str | None = None
+    duration_days: int
+    active: int
+
+    class Config:
+        from_attributes = True
+
 class VehicleCreate(BaseModel):
     license_plate: str
     make: str
