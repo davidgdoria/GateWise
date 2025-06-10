@@ -49,7 +49,7 @@ async def list_parking_spaces(
     parking_spaces = result.scalars().all()
     return paginate(parking_spaces)
 
-@router.patch("/{parking_space_id}", response_model=ParkingSpaceOut)
+@router.put("/{parking_space_id}", response_model=ParkingSpaceOut)
 async def update_parking_space(
     parking_space_id: int,
     update: ParkingSpaceUpdate,
@@ -62,7 +62,8 @@ async def update_parking_space(
         raise HTTPException(status_code=404, detail="Parking space not found")
     update_data = update.dict(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(parking_space, field, value)
+        if value is not None:
+            setattr(parking_space, field, value)
     await db.commit()
     await db.refresh(parking_space)
     return parking_space
