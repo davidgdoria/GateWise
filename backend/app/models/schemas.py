@@ -21,6 +21,16 @@ class VehicleUpdate(BaseModel):
     model: str | None = None
     color: str | None = None
 
+class ParkingSpaceOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    is_allocated: bool
+    is_occupied: bool
+
+    class Config:
+        from_attributes = True
+
 class VehicleOut(BaseModel):
     id: int
     license_plate: str

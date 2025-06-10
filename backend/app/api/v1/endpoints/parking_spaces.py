@@ -5,6 +5,8 @@ from app.models.parking_space import ParkingSpace
 from app.db.session import get_db
 from app.models.user import User, UserType
 from pydantic import BaseModel
+from fastapi_pagination import Page, paginate
+from app.models.schemas import ParkingSpaceOut
 
 router = APIRouter()
 
@@ -37,3 +39,12 @@ async def create_parking_space(
     await db.commit()
     await db.refresh(new_space)
     return new_space
+
+@router.get("/", response_model=Page[ParkingSpaceOut])
+async def list_parking_spaces(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(admin_required)
+):
+    result = await db.execute(select(ParkingSpace))
+    parking_spaces = result.scalars().all()
+    return paginate(parking_spaces)
