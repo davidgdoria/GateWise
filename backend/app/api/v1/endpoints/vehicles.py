@@ -9,6 +9,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from fastapi_pagination import Page, paginate
+from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 
@@ -34,7 +35,7 @@ async def list_vehicles(
         vehicles = await db.execute(
             select(Vehicle).where(Vehicle.owner_id == user.id).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
         )
-    return paginate(list(vehicles.scalars().all()))
+    return paginate([VehicleOut.from_orm(v) for v in vehicles.scalars().all()])
 
 @router.post("/", response_model=VehicleOut, status_code=201)
 async def create_vehicle(
@@ -63,6 +64,8 @@ async def create_vehicle(
         await db.rollback()
         raise HTTPException(status_code=400, detail="License plate already exists")
     await db.refresh(v)
+    result = await db.execute(select(Vehicle).where(Vehicle.id == v.id).options(selectinload(Vehicle.owner)))
+    v = result.scalar_one_or_none()
     return v
 
 @router.put("/{vehicle_id}", response_model=VehicleOut)
@@ -94,7 +97,9 @@ async def update_vehicle(
             setattr(v, field, value)
     await db.commit()
     await db.refresh(v)
-    return v
+    result = await db.execute(select(Vehicle).where(Vehicle.id == v.id).options(selectinload(Vehicle.owner)))
+    v_full = result.scalar_one_or_none()
+    return VehicleOut.from_orm(v_full)
 
 @router.delete("/{vehicle_id}", status_code=204)
 async def delete_vehicle(
