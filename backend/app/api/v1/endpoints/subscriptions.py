@@ -11,6 +11,10 @@ router = APIRouter()
 
 from datetime import datetime, timedelta
 from app.models.plan import Plan
+from app.models.parking_space import ParkingSpace
+from app.models.subscription_parking_space import SubscriptionParkingSpace
+from app.models.schemas import ParkingSpaceAllocation, SubscriptionParkingSpacesOut, ParkingSpaceOut
+from fastapi import Body
 
 @router.post("/", response_model=SubscriptionOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
 async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession = Depends(get_db)):
@@ -55,6 +59,47 @@ async def list_subscriptions(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Subscription))
     subscriptions = result.scalars().all()
     return paginate(subscriptions)
+
+@router.post("/{subscription_id}/allocate_spaces", response_model=SubscriptionParkingSpacesOut, dependencies=[Depends(admin_required)])
+async def allocate_parking_spaces(subscription_id: int, allocation: ParkingSpaceAllocation = Body(...), db: AsyncSession = Depends(get_db)):
+    # Busca subscrição
+    result = await db.execute(select(Subscription).where(Subscription.id == subscription_id))
+    subscription = result.scalar_one_or_none()
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    # Limite máximo
+    if len(allocation.parking_space_ids) > subscription.spaces_allocated:
+        raise HTTPException(status_code=400, detail=f"This subscription allows allocation of up to {subscription.spaces_allocated} spaces.")
+    # Busca lugares
+    result = await db.execute(select(ParkingSpace).where(ParkingSpace.id.in_(allocation.parking_space_ids)))
+    parking_spaces = result.scalars().all()
+    if len(parking_spaces) != len(allocation.parking_space_ids):
+        raise HTTPException(status_code=404, detail="One or more parking spaces not found.")
+    # Verifica se já estão alocados
+    for space in parking_spaces:
+        if space.is_allocated:
+            raise HTTPException(status_code=400, detail=f"Parking space {space.id} is already allocated.")
+    # Associa
+    for space in parking_spaces:
+        assoc = SubscriptionParkingSpace(subscription_id=subscription_id, parking_space_id=space.id)
+        db.add(assoc)
+        space.is_allocated = True
+        db.add(space)
+    await db.commit()
+    # Retorna todos associados
+    result = await db.execute(
+        select(ParkingSpace).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
+    )
+    spaces = result.scalars().all()
+    return {"parking_spaces": [ParkingSpaceOut.from_orm(s) for s in spaces]}
+
+@router.get("/{subscription_id}/spaces", response_model=SubscriptionParkingSpacesOut, dependencies=[Depends(admin_required)])
+async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ParkingSpace).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
+    )
+    spaces = result.scalars().all()
+    return {"parking_spaces": [ParkingSpaceOut.from_orm(s) for s in spaces]}
 
 from datetime import datetime
 

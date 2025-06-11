@@ -51,6 +51,12 @@ class SubscriptionOut(BaseModel):
     class Config:
         from_attributes = True
 
+class ParkingSpaceAllocation(BaseModel):
+    parking_space_ids: list[int]
+
+class SubscriptionParkingSpacesOut(BaseModel):
+    parking_spaces: list['ParkingSpaceOut']
+
 class VehicleCreate(BaseModel):
     license_plate: str
     make: str
