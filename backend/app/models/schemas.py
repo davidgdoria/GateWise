@@ -113,6 +113,7 @@ class VehicleOut(BaseModel):
     make: str
     model: str
     color: str
+    type: str
     created_at: datetime
     updated_at: datetime
 
