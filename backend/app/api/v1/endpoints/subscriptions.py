@@ -48,10 +48,13 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
     await db.refresh(new_subscription)
     return new_subscription
 
-@router.get("/", response_model=List[SubscriptionOut], dependencies=[Depends(admin_required)])
+from fastapi_pagination import Page, paginate
+
+@router.get("/", response_model=Page[SubscriptionOut], dependencies=[Depends(admin_required)])
 async def list_subscriptions(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Subscription))
-    return result.scalars().all()
+    subscriptions = result.scalars().all()
+    return paginate(subscriptions)
 
 from datetime import datetime
 
