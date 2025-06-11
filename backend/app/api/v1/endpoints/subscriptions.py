@@ -39,7 +39,9 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
         start_date=start_date,
         end_date=end_date,
         status=subscription.status,
-        cancellation_date=subscription.cancellation_date
+        cancellation_date=subscription.cancellation_date,
+        spaces_allocated=plan.num_spaces,
+        price_at_subscription=plan.price
     )
     db.add(new_subscription)
     await db.commit()

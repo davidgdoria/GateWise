@@ -34,7 +34,6 @@ class SubscriptionCreate(BaseModel):
     user_id: int
     plan_id: int
     start_date: datetime | None = None
-    end_date: datetime | None = None
     status: str = "active"
     cancellation_date: datetime | None = None
 
@@ -46,6 +45,8 @@ class SubscriptionOut(BaseModel):
     end_date: datetime | None = None
     status: str
     cancellation_date: datetime | None = None
+    spaces_allocated: int
+    price_at_subscription: float
 
     class Config:
         from_attributes = True
