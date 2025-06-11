@@ -50,6 +50,7 @@ async def seed_users():
                 exists = result.scalar_one_or_none()
                 if not exists:
                     v = Vehicle(
+    type=random.choice(["car", "motorcycle"]),
                         license_plate=license_plate,
                         make=f"Make{idx}{vnum}",
                         model=f"Model{idx}{vnum}",
@@ -128,6 +129,7 @@ async def seed_subscriptions_and_allocations():
                     exists = result.scalar_one_or_none()
                     if not exists:
                         v = Vehicle(
+    type=random.choice(["car", "motorcycle"]),
                             license_plate=license_plate,
                             make=f"MakeAdmin{vnum}",
                             model=f"ModelAdmin{vnum}",
