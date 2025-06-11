@@ -13,7 +13,9 @@ from datetime import datetime, timedelta
 from app.models.plan import Plan
 from app.models.parking_space import ParkingSpace
 from app.models.subscription_parking_space import SubscriptionParkingSpace
-from app.models.schemas import ParkingSpaceAllocation, SubscriptionParkingSpacesOut, ParkingSpaceOut
+from app.models.vehicle import Vehicle
+from app.models.schemas import ParkingSpaceAllocation, SubscriptionParkingSpacesOut, ParkingSpaceOut, VehicleOut, BaseModel
+
 from fastapi import Body
 
 @router.post("/", response_model=SubscriptionOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
@@ -57,6 +59,13 @@ from fastapi_pagination import Page, paginate
 from app.core.security import verify_token
 from app.models.user import User
 
+class VehicleParkingAssociationIn(BaseModel):
+    vehicle_id: int
+
+class VehicleParkingAssociationOut(BaseModel):
+    vehicle_id: int
+    parking_space_id: int
+
 async def get_current_user(username: str = Depends(verify_token), db: AsyncSession = Depends(get_db)) -> User:
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
@@ -69,6 +78,42 @@ async def list_my_subscriptions(db: AsyncSession = Depends(get_db), current_user
     result = await db.execute(select(Subscription).where(Subscription.user_id == current_user.id))
     subscriptions = result.scalars().all()
     return paginate(subscriptions)
+
+from fastapi import Path
+
+@router.post("/{subscription_id}/spaces/{parking_space_id}/associate_vehicle", response_model=VehicleParkingAssociationOut)
+async def associate_vehicle_to_parking_space(
+    subscription_id: int = Path(...),
+    parking_space_id: int = Path(...),
+    data: VehicleParkingAssociationIn = Body(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Busca subscrição e valida dono
+    sub_result = await db.execute(select(Subscription).where(Subscription.id == subscription_id))
+    subscription = sub_result.scalar_one_or_none()
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    if subscription.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not the owner of this subscription")
+    # Verifica se o veículo pertence ao dono da subscrição
+    vehicle_result = await db.execute(select(Vehicle).where(Vehicle.id == data.vehicle_id, Vehicle.owner_id == subscription.user_id))
+    vehicle = vehicle_result.scalar_one_or_none()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found or does not belong to the subscription owner")
+    # Verifica se a vaga está associada à subscrição ativa do usuário e ao subscription_id
+    subq = select(SubscriptionParkingSpace).join(Subscription).where(
+        SubscriptionParkingSpace.parking_space_id == parking_space_id,
+        SubscriptionParkingSpace.subscription_id == subscription_id,
+        Subscription.user_id == current_user.id,
+        Subscription.status == "active"
+    )
+    result = await db.execute(subq)
+    assoc = result.scalar_one_or_none()
+    if not assoc:
+        raise HTTPException(status_code=403, detail="Parking space not allocated to user or not active in this subscription")
+    # Associa veículo à vaga (dummy response)
+    return VehicleParkingAssociationOut(vehicle_id=data.vehicle_id, parking_space_id=parking_space_id)
 
 @router.get("/", response_model=Page[SubscriptionOut], dependencies=[Depends(admin_required)])
 async def list_subscriptions(db: AsyncSession = Depends(get_db)):
