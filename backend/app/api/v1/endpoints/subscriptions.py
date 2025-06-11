@@ -112,7 +112,15 @@ async def associate_vehicle_to_parking_space(
     assoc = result.scalar_one_or_none()
     if not assoc:
         raise HTTPException(status_code=403, detail="Parking space not allocated to user or not active in this subscription")
-    # Associa veículo à vaga (dummy response)
+    # Atualiza o vehicle_id na vaga
+    space_result = await db.execute(select(ParkingSpace).where(ParkingSpace.id == parking_space_id))
+    space = space_result.scalar_one_or_none()
+    if not space:
+        raise HTTPException(status_code=404, detail="Parking space not found")
+    space.vehicle_id = data.vehicle_id
+    space.is_occupied = True
+    db.add(space)
+    await db.commit()
     return VehicleParkingAssociationOut(vehicle_id=data.vehicle_id, parking_space_id=parking_space_id)
 
 @router.get("/", response_model=Page[SubscriptionOut], dependencies=[Depends(admin_required)])
@@ -156,13 +164,20 @@ async def allocate_parking_spaces(subscription_id: int, allocation: ParkingSpace
 
 from fastapi_pagination import Page, paginate
 
-@router.get("/{subscription_id}/spaces", response_model=Page[ParkingSpaceOut], dependencies=[Depends(admin_required)])
+from sqlalchemy.orm import selectinload
+from app.models.schemas import ParkingSpaceWithVehicleOut, VehicleOut
+
+@router.get("/{subscription_id}/parking-spaces", response_model=Page[ParkingSpaceWithVehicleOut], dependencies=[Depends(admin_required)])
 async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(ParkingSpace).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
+        select(ParkingSpace).options(selectinload(ParkingSpace.vehicle)).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
     )
     spaces = result.scalars().all()
-    return paginate([ParkingSpaceOut.from_orm(s) for s in spaces])
+    output = []
+    for s in spaces:
+        vehicle = VehicleOut.from_orm(s.vehicle) if s.vehicle else None
+        output.append(ParkingSpaceWithVehicleOut(**s.__dict__, vehicle=vehicle))
+    return paginate(output)
 
 from datetime import datetime
 
