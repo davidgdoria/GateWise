@@ -107,6 +107,13 @@ class ParkingSpaceOut(BaseModel):
     class Config:
         from_attributes = True
 
+class UserShortOut(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    class Config:
+        from_attributes = True
+
 class VehicleOut(BaseModel):
     id: int
     license_plate: str
@@ -115,6 +122,7 @@ class VehicleOut(BaseModel):
     color: str
     type: str
     owner_id: int
+    owner: UserShortOut
     created_at: datetime
     updated_at: datetime
 
