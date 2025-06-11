@@ -93,13 +93,15 @@ async def allocate_parking_spaces(subscription_id: int, allocation: ParkingSpace
     spaces = result.scalars().all()
     return {"parking_spaces": [ParkingSpaceOut.from_orm(s) for s in spaces]}
 
-@router.get("/{subscription_id}/spaces", response_model=SubscriptionParkingSpacesOut, dependencies=[Depends(admin_required)])
+from fastapi_pagination import Page, paginate
+
+@router.get("/{subscription_id}/spaces", response_model=Page[ParkingSpaceOut], dependencies=[Depends(admin_required)])
 async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(ParkingSpace).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
     )
     spaces = result.scalars().all()
-    return {"parking_spaces": [ParkingSpaceOut.from_orm(s) for s in spaces]}
+    return paginate([ParkingSpaceOut.from_orm(s) for s in spaces])
 
 from datetime import datetime
 
