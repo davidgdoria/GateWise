@@ -27,12 +27,12 @@ async def list_vehicles(
     if user.type.value == "admin":
         # Admin vê todos os veículos
         vehicles = await db.execute(
-            select(Vehicle).options(selectinload(Vehicle.owner))
+            select(Vehicle).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
         )
     else:
         # Usuário comum vê só os seus
         vehicles = await db.execute(
-            select(Vehicle).where(Vehicle.owner_id == user.id).options(selectinload(Vehicle.owner))
+            select(Vehicle).where(Vehicle.owner_id == user.id).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
         )
     return paginate(list(vehicles.scalars().all()))
 

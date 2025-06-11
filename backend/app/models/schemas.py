@@ -107,6 +107,9 @@ class ParkingSpaceOut(BaseModel):
     class Config:
         from_attributes = True
 
+class ParkingSpaceWithVehicleOut(ParkingSpaceOut):
+    vehicle: 'VehicleOut | None' = None
+
 class UserShortOut(BaseModel):
     id: int
     email: str

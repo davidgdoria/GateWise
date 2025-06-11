@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from app.models.base import Base
 
 class ParkingSpace(Base):
@@ -9,3 +10,6 @@ class ParkingSpace(Base):
     description = Column(String)
     is_allocated = Column(Boolean, nullable=False, default=False)
     is_occupied = Column(Boolean, nullable=False, default=False)
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)
+
+    vehicle = relationship("Vehicle")
