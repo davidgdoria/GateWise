@@ -54,6 +54,22 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
 
 from fastapi_pagination import Page, paginate
 
+from app.core.security import verify_token
+from app.models.user import User
+
+async def get_current_user(username: str = Depends(verify_token), db: AsyncSession = Depends(get_db)) -> User:
+    result = await db.execute(select(User).where(User.username == username))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+@router.get("/my", response_model=Page[SubscriptionOut])
+async def list_my_subscriptions(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = await db.execute(select(Subscription).where(Subscription.user_id == current_user.id))
+    subscriptions = result.scalars().all()
+    return paginate(subscriptions)
+
 @router.get("/", response_model=Page[SubscriptionOut], dependencies=[Depends(admin_required)])
 async def list_subscriptions(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Subscription))
