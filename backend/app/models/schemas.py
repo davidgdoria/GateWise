@@ -114,6 +114,7 @@ class VehicleOut(BaseModel):
     model: str
     color: str
     type: str
+    user_id: int
     created_at: datetime
     updated_at: datetime
 

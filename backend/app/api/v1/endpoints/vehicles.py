@@ -23,9 +23,12 @@ async def list_vehicles(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    vehicles = await db.execute(
-        select(Vehicle).where(Vehicle.owner_id == user.id)
-    )
+    if user.type.value == "admin":
+        # Admin vê todos os veículos
+        vehicles = await db.execute(select(Vehicle))
+    else:
+        # Usuário comum vê só os seus
+        vehicles = await db.execute(select(Vehicle).where(Vehicle.owner_id == user.id))
     return paginate(list(vehicles.scalars().all()))
 
 @router.post("/", response_model=VehicleOut, status_code=201)
