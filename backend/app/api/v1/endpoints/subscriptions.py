@@ -31,8 +31,8 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
         raise HTTPException(status_code=404, detail="Plan not found")
     # Define start_date
     start_date = subscription.start_date or datetime.utcnow()
-    # Calcula end_date se não enviado
-    end_date = subscription.end_date or (start_date + timedelta(days=plan.duration_days))
+    # end_date sempre calculado
+    end_date = start_date + timedelta(days=plan.duration_days)
     new_subscription = Subscription(
         user_id=subscription.user_id,
         plan_id=subscription.plan_id,
@@ -52,3 +52,20 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
 async def list_subscriptions(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Subscription))
     return result.scalars().all()
+
+from datetime import datetime
+
+@router.patch("/{subscription_id}/cancel", response_model=SubscriptionOut, dependencies=[Depends(admin_required)])
+async def cancel_subscription(subscription_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Subscription).where(Subscription.id == subscription_id))
+    subscription = result.scalar_one_or_none()
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    if subscription.status == "cancelled":
+        raise HTTPException(status_code=400, detail="Subscription already cancelled")
+    subscription.status = "cancelled"
+    subscription.cancellation_date = datetime.utcnow()
+    db.add(subscription)
+    await db.commit()
+    await db.refresh(subscription)
+    return subscription

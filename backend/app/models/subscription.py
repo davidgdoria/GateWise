@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+import sqlalchemy as sa
 from datetime import datetime
+from app.models.base import Base
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -17,4 +18,7 @@ class Subscription(Base):
 
     plan = relationship("Plan")
     user = relationship("User")
-    parking_spaces = relationship("SubscriptionParkingSpace", back_populates="subscription")
+
+# Corrige relacionamento circular
+from app.models.subscription_parking_space import SubscriptionParkingSpace
+Subscription.parking_spaces = relationship("SubscriptionParkingSpace", back_populates="subscription")
