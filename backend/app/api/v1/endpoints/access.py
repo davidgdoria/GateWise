@@ -24,7 +24,12 @@ class AccessCheckOut(BaseModel):
 @router.post("/access_check", response_model=AccessCheckOut)
 async def check_vehicle_access(data: AccessCheckIn, db: AsyncSession = Depends(get_db)):
     # Busca veículo pela matrícula
-    vehicle_result = await db.execute(select(Vehicle).where(Vehicle.license_plate == data.license_plate))
+    from sqlalchemy import func
+    vehicle_result = await db.execute(
+        select(Vehicle).where(
+            func.replace(func.upper(Vehicle.license_plate), ' ', '') == data.license_plate.upper().replace(' ', '')
+        )
+    )
     vehicle = vehicle_result.scalar_one_or_none()
     access_granted = False
     reason = "Vehicle not found"
