@@ -109,7 +109,7 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        time.sleep(0.3)
+        time.sleep(0.5)
 
     cap.release()
     cv2.destroyAllWindows()
