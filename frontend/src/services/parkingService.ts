@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import Cookies from 'js-cookie';
 
 export interface ParkingSpace {
   id: number;
@@ -36,14 +37,14 @@ export interface ParkingRecordCreate {
 }
 
 class ParkingService {
-  async getParkingSpaces(skip = 0, limit = 100, isOccupied?: boolean): Promise<ParkingSpace[]> {
+  async getParkingSpaces(page = 1, size = 10): Promise<{ items: any[]; total: number; page: number; size: number; pages: number }> {
+    const token = Cookies.get('access_token');
     const params = new URLSearchParams();
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
-    if (isOccupied !== undefined) {
-      params.append('is_occupied', isOccupied.toString());
-    }
-    return apiClient.get<ParkingSpace[]>(`/parking/spaces/?${params.toString()}`);
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    return apiClient.get<{ items: any[]; total: number; page: number; size: number; pages: number }>(`/parking-spaces/?${params.toString()}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
   }
 
   async getParkingSpace(id: number): Promise<ParkingSpace> {

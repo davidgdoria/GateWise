@@ -1,61 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Box,
   Typography,
-  Button,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   IconButton,
-  Select,
-  MenuItem,
-  FormControl,
-  Pagination,
   Tooltip,
+  Button,
+  Pagination
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../services/api';
 import Cookies from 'js-cookie';
 
-interface Owner {
+interface User {
   id: number;
   email: string;
   full_name: string;
-}
-
-interface Vehicle {
-  id: number;
-  license_plate: string;
-  make: string;
-  model: string;
-  color: string;
   type: string;
-  owner_id: number;
-  owner: Owner;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-interface VehicleResponse {
-  items: Vehicle[];
+interface UserResponse {
+  items: User[];
   total: number;
   page: number;
   size: number;
   pages: number;
 }
 
-const Vehicles: React.FC = () => {
+const Users: React.FC = () => {
   const [page, setPage] = useState(1);
-  const [data, setData] = useState<VehicleResponse>({
+  const [data, setData] = useState<UserResponse>({
     items: [],
     total: 0,
     page: 1,
@@ -66,7 +52,7 @@ const Vehicles: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchVehicles = async () => {
+    const fetchUsers = async () => {
       try {
         const token = Cookies.get('access_token');
         if (!token) {
@@ -74,21 +60,17 @@ const Vehicles: React.FC = () => {
           return;
         }
 
-        const response = await axios.get<VehicleResponse>('http://localhost:8000/api/v1/vehicles', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
+        const response = await apiClient.get<UserResponse>('/users', {
           params: {
             page: page,
             size: 10
           }
         });
 
-        console.log('Vehicle data:', response.data);
-        setData(response.data);
-      } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
+        setData(response);
+      } catch (error: any) {
+        console.error('Error fetching users:', error);
+        if (error.response?.status === 401) {
           navigate('/login');
         }
         setData({
@@ -101,25 +83,45 @@ const Vehicles: React.FC = () => {
       }
     };
 
-    fetchVehicles();
+    fetchUsers();
   }, [page, navigate]);
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
   };
 
+  const handleEdit = (id: number) => {
+    const userToEdit = data.items.find(user => user.id === id);
+    if (userToEdit) {
+      navigate(`/users/edit/${id}`, { state: { user: userToEdit } });
+    }
+  };
+
+  const handleDelete = async (userId: number) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await apiClient.delete(`/users/${userId}`);
+        // Refresh the list
+        setPage(1);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        setError('Failed to delete user');
+      }
+    }
+  };
+
   return (
     <Layout>
       <Box sx={{ p: 4 }}>
         <Typography variant="h4" fontWeight={600} mb={4}>
-          Vehicles
+          Users
         </Typography>
 
         <Paper sx={{ p: 3, borderRadius: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
             <Button
               variant="contained"
-              onClick={() => navigate('/vehicles/add')}
+              onClick={() => navigate('/users/add')}
               sx={{
                 background: '#222',
                 color: '#fff',
@@ -129,7 +131,7 @@ const Vehicles: React.FC = () => {
                 '&:hover': { background: '#444' }
               }}
             >
-              Add Vehicle
+              Add User
             </Button>
           </Box>
 
@@ -143,26 +145,26 @@ const Vehicles: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>License Plate</TableCell>
-                  <TableCell>Make</TableCell>
-                  <TableCell>Model</TableCell>
-                  <TableCell>Color</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
                   <TableCell>Type</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Created At</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.items.map((vehicle) => (
-                  <TableRow key={vehicle.id}>
-                    <TableCell>{vehicle.license_plate}</TableCell>
-                    <TableCell>{vehicle.make}</TableCell>
-                    <TableCell>{vehicle.model}</TableCell>
-                    <TableCell>{vehicle.color}</TableCell>
-                    <TableCell>{vehicle.type}</TableCell>
+                {data.items.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.full_name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.type}</TableCell>
+                    <TableCell>{user.is_active ? 'Active' : 'Inactive'}</TableCell>
+                    <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Tooltip title="Edit">
                         <IconButton 
-                          onClick={() => navigate(`/vehicles/edit/${vehicle.id}`, { state: { vehicle } })}
+                          onClick={() => handleEdit(user.id)}
                           size="small"
                         >
                           <EditIcon />
@@ -170,7 +172,7 @@ const Vehicles: React.FC = () => {
                       </Tooltip>
                       <Tooltip title="Delete">
                         <IconButton 
-                          onClick={() => navigate(`/vehicles/delete/${vehicle.id}`)}
+                          onClick={() => handleDelete(user.id)}
                           size="small"
                           color="error"
                         >
@@ -206,4 +208,4 @@ const Vehicles: React.FC = () => {
   );
 };
 
-export default Vehicles; 
+export default Users; 

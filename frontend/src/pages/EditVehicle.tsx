@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
 import Layout from '../components/Layout';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { apiClient } from '../services/api';
+import { AxiosError } from 'axios';
 
-const vehicleTypes = ['Car', 'Motorcycle'];
+const vehicleTypes = ['car', 'motorcycle'];
 const commonColors = [
   'Black',
   'White',
@@ -18,17 +19,60 @@ const commonColors = [
   'Other'
 ];
 
-const AddVehicle: React.FC = () => {
+interface Vehicle {
+  id: number;
+  license_plate: string;
+  make: string;
+  model: string;
+  color: string;
+  type: string;
+  owner_id: number;
+  owner: {
+    id: number;
+    email: string;
+    full_name: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+const EditVehicle: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const vehicle = location.state?.vehicle as Vehicle;
   const [formData, setFormData] = useState({
     license_plate: '',
     make: '',
     model: '',
     color: '',
-    type: 'Car'
+    type: 'car'
   });
   const [showCustomColor, setShowCustomColor] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (vehicle) {
+      setFormData({
+        license_plate: vehicle.license_plate,
+        make: vehicle.make || '',
+        model: vehicle.model || '',
+        color: vehicle.color || '',
+        type: vehicle.type?.toLowerCase() || 'car'
+      });
+
+      // Check if the color is not in the common colors list
+      if (!commonColors.includes(vehicle.color)) {
+        setShowCustomColor(true);
+      }
+
+      setLoading(false);
+    } else {
+      // If no vehicle data in state, redirect back to vehicles list
+      navigate('/vehicles');
+    }
+  }, [vehicle, navigate]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -78,30 +122,34 @@ const AddVehicle: React.FC = () => {
         return;
       }
 
-      await axios.post('http://localhost:8000/api/v1/vehicles', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
+      await apiClient.put(`/vehicles/${id}/`, formData);
       navigate('/vehicles');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.detail || 'Failed to add vehicle. Please try again.');
+      if (error instanceof AxiosError && error.response?.data?.detail) {
+        setError(error.response.data.detail);
       } else {
-        setError('An unexpected error occurred.');
+        setError('Failed to update vehicle. Please try again.');
       }
-      console.error('Error adding vehicle:', error);
+      console.error('Error updating vehicle:', error);
     }
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <Typography>Loading...</Typography>
+        </Box>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
-            Add Vehicle
+            Edit Vehicle
           </Typography>
           <form onSubmit={handleSubmit}>
             <TextField
@@ -167,7 +215,7 @@ const AddVehicle: React.FC = () => {
               >
                 {vehicleTypes.map(type => (
                   <MenuItem key={type} value={type}>
-                    {type}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </MenuItem>
                 ))}
               </Select>
@@ -193,7 +241,7 @@ const AddVehicle: React.FC = () => {
                   '&:hover': { background: '#444' } 
                 }}
               >
-                Add Vehicle
+                Update Vehicle
               </Button>
             </Box>
           </form>
@@ -203,4 +251,4 @@ const AddVehicle: React.FC = () => {
   );
 };
 
-export default AddVehicle; 
+export default EditVehicle; 

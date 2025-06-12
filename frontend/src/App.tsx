@@ -19,12 +19,43 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ContactUsInternal from './pages/ContactUsInternal';
 import Help from './pages/Help';
+import Plans from './pages/Plans';
+import Cookies from 'js-cookie';
+import EditVehicle from './pages/EditVehicle';
+import Users from './pages/Users';
+import EditUser from './pages/EditUser';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
+const adminOnlyRoutes = [
+  '/vehicles/add', '/alerts', '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
+];
+
 // Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // BYPASS: permitir acesso sempre durante desenvolvimento
+const ProtectedRouteComponent = ({ children }: { children: React.ReactNode }) => {
+  const location = window.location.pathname;
+  const userType = Cookies.get('user_type');
+
+  // All users can access dashboard, vehicles, subscriptions
+  if (
+    location.startsWith('/dashboard') ||
+    location.startsWith('/vehicles') && location !== '/vehicles/add' ||
+    location.startsWith('/subscriptions') && location !== '/subscriptions/add'
+  ) {
+    return <>{children}</>;
+  }
+
+  // Only admins can access adminOnlyRoutes
+  if (adminOnlyRoutes.some((route) => location.startsWith(route))) {
+    if (userType === 'admin') {
+      return <>{children}</>;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  // Default: allow
   return <>{children}</>;
 };
 
@@ -41,83 +72,111 @@ function App() {
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Dashboard />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/vehicles" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Vehicles />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/vehicles/add" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <AddVehicle />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/vehicles/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditVehicle />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/users" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <Users />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/users/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditUser />
+                </Layout>
+              </ProtectedRouteComponent>
             } />
             <Route path="/alerts" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Alerts />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/settings" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Settings />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/subscriptions" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Subscriptions />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/subscriptions/add" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <AddSubscription />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/reports" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Reports />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/payments" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Payments />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/dashboard/contact" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <ContactUsInternal />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/help" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Help />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/plans" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <Plans />
+                </Layout>
+              </ProtectedRouteComponent>
             } />
 
             

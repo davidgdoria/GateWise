@@ -103,4 +103,35 @@ export function useParking() {
   };
 }
 */
+import { useState, useCallback } from 'react';
+import { parkingService } from '../services/parkingService';
+
+export function useParking() {
+  const [spaces, setSpaces] = useState<any[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchParkingSpaces = useCallback(async (page = 1, size = 10) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await parkingService.getParkingSpaces(page, size);
+      setSpaces(data.items);
+      setTotal(data.total);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch parking spaces');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    spaces,
+    total,
+    loading,
+    error,
+    fetchParkingSpaces,
+  };
+}
 export {} 

@@ -97,4 +97,11 @@ export const alertApi = {
   createAlert: (data: any) => apiClient.post('/alerts', data),
   updateAlert: (id: number, data: any) => apiClient.put(`/alerts/${id}`, data),
   resolveAlert: (id: number) => apiClient.post(`/alerts/${id}/resolve`),
-}; 
+};
+
+export const api = axios.create({
+  baseURL: 'http://localhost:8000',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+}); 

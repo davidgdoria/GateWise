@@ -30,6 +30,7 @@ import {
 } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
+import { useParking } from '../hooks/useParking';
 
 ChartJS.register(
   CategoryScale,
@@ -94,13 +95,6 @@ export default function Dashboard() {
     '2024-06-04': 7,
     '2024-06-05': 10,
   };
-  const spaces = [
-    { is_occupied: false },
-    { is_occupied: true },
-    { is_occupied: false },
-    { is_occupied: false },
-    { is_occupied: true },
-  ];
   const {
     vehicles,
     total,
@@ -108,11 +102,13 @@ export default function Dashboard() {
     error: vehiclesError,
     fetchVehicles,
   } = useVehicles();
+  const { spaces, total: totalSpaces, loading: parkingLoading, error: parkingError, fetchParkingSpaces } = useParking();
 
   React.useEffect(() => {
     fetchVehicles();
+    fetchParkingSpaces();
     // All other data is mock
-  }, [fetchVehicles]);
+  }, [fetchVehicles, fetchParkingSpaces]);
 
   const loading = vehiclesLoading;
   const error = vehiclesError;
@@ -210,15 +206,15 @@ export default function Dashboard() {
               <Box display="flex" alignItems="center" mb={1}>
                 <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
                 <Box>
-                  <Typography variant="subtitle2" color="#0a2a5c">Available Spaces</Typography>
+                  <Typography variant="subtitle2" color="#0a2a5c">Parking Spaces</Typography>
                   <Typography variant="body2" color="#666">Total</Typography>
                 </Box>
               </Box>
               <Typography variant="h3" fontWeight={700} color="#0a2a5c">
-                {spaces.filter(space => !space.is_occupied).length}
+                {totalSpaces}
               </Typography>
               <Typography variant="body2" color="#666">
-                out of {spaces.length} total spaces
+                {spaces.length} loaded
               </Typography>
             </CardContent>
           </Card>
