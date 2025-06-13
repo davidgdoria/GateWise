@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.models.schemas import Token
+from app.models.schemas import Token, UserShortOut
+from pydantic import BaseModel
 from pydantic import BaseModel
 from fastapi_pagination import Page, paginate
 from app.models.user import User, UserType
@@ -20,15 +21,70 @@ from app.core.config import get_settings
 settings = get_settings()
 
 router = APIRouter()
+
+class UserFullNameUpdate(BaseModel):
+    full_name: str
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Dependency to check admin
+
+@router.put("/{user_id}/edit", response_model=UserShortOut)
+async def edit_user(
+    user_id: int,
+    update: UserFullNameUpdate,
+    username: str = Depends(verify_token),
+    db: AsyncSession = Depends(get_db)
+):
+    # Busca usuário autenticado
+    result = await db.execute(select(User).where(User.username == username))
+    current_user = result.scalar_one_or_none()
+    if not current_user:
+        raise HTTPException(status_code=404, detail="Authenticated user not found")
+    # Admin pode editar qualquer um, usuário comum só pode editar o próprio
+    if current_user.type != UserType.admin and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not allowed to edit other users")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.full_name = update.full_name
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return UserShortOut.from_orm(user)
 async def admin_required(username: str = Depends(verify_token), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
     if not user or user.type != UserType.admin:
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return user
+
+@router.delete("/{user_id}", status_code=204)
+async def delete_user(
+    user_id: int,
+    username: str = Depends(verify_token),
+    db: AsyncSession = Depends(get_db)
+):
+    # Busca usuário autenticado
+    result = await db.execute(select(User).where(User.username == username))
+    current_user = result.scalar_one_or_none()
+    if not current_user:
+        raise HTTPException(status_code=404, detail="Authenticated user not found")
+    # Admin pode deletar qualquer um, usuário comum só pode deletar o próprio
+    if current_user.type != UserType.admin and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not allowed to delete other users")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    from sqlalchemy.exc import IntegrityError
+    try:
+        await db.delete(user)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="User has linked records and cannot be deleted.")
+    return None
 
 from pydantic import BaseModel
 import secrets
