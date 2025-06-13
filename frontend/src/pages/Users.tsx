@@ -2,33 +2,41 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Paper,
+  Button,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Paper,
   IconButton,
-  Tooltip,
-  Button,
-  Pagination
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Pagination,
+  SelectChangeEvent,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../services/api';
 import Cookies from 'js-cookie';
+import { apiClient } from '../services/api';
 
 interface User {
   id: number;
-  email: string;
+  username: string;
   full_name: string;
+  email: string;
   type: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 interface UserResponse {
@@ -48,66 +56,95 @@ const Users: React.FC = () => {
     size: 10,
     pages: 0
   });
-  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<User>({
+    id: 0,
+    username: '',
+    full_name: '',
+    email: '',
+    type: ''
+  });
+  const [editIndex, setEditIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = Cookies.get('access_token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await apiClient.get<UserResponse>('/users', {
-          params: {
-            page: page,
-            size: 10
-          }
-        });
-
-        setData(response);
-      } catch (error: any) {
-        console.error('Error fetching users:', error);
-        if (error.response?.status === 401) {
-          navigate('/login');
-        }
-        setData({
-          items: [],
-          total: 0,
-          page: 1,
-          size: 10,
-          pages: 0
-        });
-      }
-    };
-
     fetchUsers();
-  }, [page, navigate]);
+  }, [page]);
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
-  };
+  const fetchUsers = async () => {
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
 
-  const handleEdit = (id: number) => {
-    const userToEdit = data.items.find(user => user.id === id);
-    if (userToEdit) {
-      navigate(`/users/edit/${id}`, { state: { user: userToEdit } });
+      const response = await apiClient.getUsers(page, 10);
+      setData(response);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      if (error instanceof Error && error.message.includes('401')) {
+        navigate('/login');
+      }
+      setError('Failed to fetch users');
     }
   };
 
-  const handleDelete = async (userId: number) => {
+  const handleOpen = (user?: User) => {
+    setOpen(true);
+    if (user) {
+      setForm(user);
+      setEditIndex(user.id);
+    } else {
+      setForm({ id: 0, username: '', full_name: '', email: '', type: '' });
+      setEditIndex(null);
+    }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setForm({ id: 0, username: '', full_name: '', email: '', type: '' });
+    setEditIndex(null);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }> | SelectChangeEvent) => {
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name as string]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editIndex) {
+        await apiClient.updateUser(editIndex, form);
+      } else {
+        await apiClient.createUser(form);
+      }
+      handleClose();
+      fetchUsers();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      setError('Failed to save user');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await apiClient.delete(`/users/${userId}`);
-        // Refresh the list
-        setPage(1);
+        await apiClient.deleteUser(id);
+        fetchUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
         setError('Failed to delete user');
       }
     }
+  };
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
   };
 
   return (
@@ -118,10 +155,11 @@ const Users: React.FC = () => {
         </Typography>
 
         <Paper sx={{ p: 3, borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
             <Button
               variant="contained"
-              onClick={() => navigate('/users/add')}
+              onClick={() => handleOpen()}
+              startIcon={<AddIcon />}
               sx={{
                 background: '#222',
                 color: '#fff',
@@ -145,40 +183,27 @@ const Users: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Name</TableCell>
+                  <TableCell>Username</TableCell>
+                  <TableCell>Full Name</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>Type</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created At</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {data.items.map((user) => (
                   <TableRow key={user.id}>
+                    <TableCell>{user.username}</TableCell>
                     <TableCell>{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.type}</TableCell>
-                    <TableCell>{user.is_active ? 'Active' : 'Inactive'}</TableCell>
-                    <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <Tooltip title="Edit">
-                        <IconButton 
-                          onClick={() => handleEdit(user.id)}
-                          size="small"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton 
-                          onClick={() => handleDelete(user.id)}
-                          size="small"
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                    <TableCell align="right">
+                      <IconButton onClick={() => handleOpen(user)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(user.id)}>
+                        <DeleteIcon />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -203,6 +228,52 @@ const Users: React.FC = () => {
             </Box>
           )}
         </Paper>
+
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>{editIndex ? 'Edit User' : 'Add User'}</DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+              <TextField
+                name="username"
+                label="Username"
+                value={form.username}
+                onChange={handleChange}
+                fullWidth
+              />
+              <TextField
+                name="full_name"
+                label="Full Name"
+                value={form.full_name}
+                onChange={handleChange}
+                fullWidth
+              />
+              <TextField
+                name="email"
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                fullWidth
+              />
+              <FormControl fullWidth>
+                <InputLabel>Type</InputLabel>
+                <Select
+                  name="type"
+                  value={form.type}
+                  onChange={handleChange}
+                  label="Type"
+                >
+                  <MenuItem value="admin">Admin</MenuItem>
+                  <MenuItem value="user">User</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleSave} variant="contained">Save</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Layout>
   );

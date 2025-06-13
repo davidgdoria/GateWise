@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -21,23 +21,43 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Layout from '../components/Layout';
+import { plansApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 interface Plan {
+  id: number;
   name: string;
   value: number;
   cars: number;
 }
 
-const initialPlans: Plan[] = [
-  { name: 'Basic', value: 99, cars: 5 },
-  { name: 'Premium', value: 199, cars: 20 },
-];
-
 const Plans: React.FC = () => {
-  const [plans, setPlans] = useState<Plan[]>(initialPlans);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [form, setForm] = useState<Plan>({ name: '', value: 0, cars: 0 });
+  const [form, setForm] = useState<Plan>({ id: 0, name: '', value: 0, cars: 0 });
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      const response = await plansApi.getPlans();
+      setPlans(response as Plan[]);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      setError('Failed to fetch plans');
+    }
+  };
 
   const handleOpen = (plan?: Plan, idx?: number) => {
     setOpen(true);
@@ -45,14 +65,14 @@ const Plans: React.FC = () => {
       setForm(plan);
       setEditIndex(idx);
     } else {
-      setForm({ name: '', value: 0, cars: 0 });
+      setForm({ id: 0, name: '', value: 0, cars: 0 });
       setEditIndex(null);
     }
   };
 
   const handleClose = () => {
     setOpen(false);
-    setForm({ name: '', value: 0, cars: 0 });
+    setForm({ id: 0, name: '', value: 0, cars: 0 });
     setEditIndex(null);
   };
 
@@ -60,15 +80,29 @@ const Plans: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    if (editIndex !== null) {
-      const updated = [...plans];
-      updated[editIndex] = { ...form, value: Number(form.value), cars: Number(form.cars) };
-      setPlans(updated);
-    } else {
-      setPlans([...plans, { ...form, value: Number(form.value), cars: Number(form.cars) }]);
+  const handleSave = async () => {
+    try {
+      if (editIndex !== null) {
+        await plansApi.updatePlan(form.id, form);
+      } else {
+        await plansApi.createPlan(form);
+      }
+      await fetchPlans();
+      handleClose();
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      setError('Failed to save plan');
     }
-    handleClose();
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await plansApi.deletePlan(id);
+      await fetchPlans();
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      setError('Failed to delete plan');
+    }
   };
 
   return (
@@ -77,6 +111,11 @@ const Plans: React.FC = () => {
         <Typography variant="h5" fontWeight={600} mb={3}>
           Plans
         </Typography>
+        {error && (
+          <Typography color="error" mb={2}>
+            {error}
+          </Typography>
+        )}
         <Box
           sx={{
             background: '#fff',
@@ -103,25 +142,29 @@ const Plans: React.FC = () => {
               New plan
             </Button>
           </Box>
-          <TableContainer component={Paper} sx={{ boxShadow: 'none', borderRadius: 3 }}>
+          <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Value</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Number of Cars</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}></TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Value</TableCell>
+                  <TableCell>Cars</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {plans.map((plan, idx) => (
-                  <TableRow key={plan.name + idx}>
+                {plans.map((plan, index) => (
+                  <TableRow key={plan.id}>
                     <TableCell>{plan.name}</TableCell>
                     <TableCell>${plan.value}</TableCell>
                     <TableCell>{plan.cars}</TableCell>
-                    <TableCell align="center">
-                      <IconButton size="small" sx={{ color: '#222' }} onClick={() => handleOpen(plan, idx)}><EditIcon /></IconButton>
-                      <IconButton size="small" sx={{ color: '#222' }}><MoreVertIcon /></IconButton>
+                    <TableCell align="right">
+                      <IconButton onClick={() => handleOpen(plan, index)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(plan.id)}>
+                        <MoreVertIcon />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -130,39 +173,42 @@ const Plans: React.FC = () => {
           </TableContainer>
         </Box>
       </Box>
+
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{editIndex !== null ? 'Edit Plan' : 'New Plan'}</DialogTitle>
         <DialogContent>
           <TextField
-            margin="normal"
-            label="Name"
             name="name"
+            label="Name"
             value={form.name}
             onChange={handleChange}
             fullWidth
+            margin="normal"
           />
           <TextField
-            margin="normal"
-            label="Value"
             name="value"
+            label="Value"
             type="number"
             value={form.value}
             onChange={handleChange}
             fullWidth
+            margin="normal"
           />
           <TextField
-            margin="normal"
-            label="Number of Cars"
             name="cars"
+            label="Cars"
             type="number"
             value={form.cars}
             onChange={handleChange}
             fullWidth
+            margin="normal"
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+          <Button onClick={handleSave} variant="contained">
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </Layout>

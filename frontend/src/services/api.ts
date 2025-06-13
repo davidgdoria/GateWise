@@ -69,17 +69,149 @@ class ApiClient {
     const response = await this.client.delete<T>(url, config);
     return response.data;
   }
+
+  // Vehicle methods
+  async getVehicles(page: number, size: number): Promise<VehicleResponse> {
+    const response = await this.client.get<VehicleResponse>('/vehicles', {
+      params: { page, size }
+    });
+    return response.data;
+  }
+
+  async getVehicle(id: number): Promise<Vehicle> {
+    const response = await this.client.get<Vehicle>(`/vehicles/${id}`);
+    return response.data;
+  }
+
+  async createVehicle(vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> {
+    const response = await this.client.post<Vehicle>('/vehicles', vehicle);
+    return response.data;
+  }
+
+  async updateVehicle(id: number, vehicle: Partial<Vehicle>): Promise<Vehicle> {
+    const response = await this.client.put<Vehicle>(`/vehicles/${id}`, vehicle);
+    return response.data;
+  }
+
+  async deleteVehicle(id: number): Promise<void> {
+    await this.client.delete(`/vehicles/${id}`);
+  }
+
+  // Alert methods
+  async getAlerts(page: number, size: number): Promise<AlertResponse> {
+    const response = await this.client.get<AlertResponse>('/alerts', {
+      params: { page, size }
+    });
+    return response.data;
+  }
+
+  async getAlert(id: number): Promise<Alert> {
+    const response = await this.client.get<Alert>(`/alerts/${id}`);
+    return response.data;
+  }
+
+  async createAlert(alert: Omit<Alert, 'id'>): Promise<Alert> {
+    const response = await this.client.post<Alert>('/alerts', alert);
+    return response.data;
+  }
+
+  async updateAlert(id: number, alert: Partial<Alert>): Promise<Alert> {
+    const response = await this.client.put<Alert>(`/alerts/${id}`, alert);
+    return response.data;
+  }
+
+  async deleteAlert(id: number): Promise<void> {
+    await this.client.delete(`/alerts/${id}`);
+  }
+
+  // Plan methods
+  async getPlans(page: number, size: number): Promise<PlanResponse> {
+    const response = await this.client.get<PlanResponse>('/plans', {
+      params: { page, size }
+    });
+    return response.data;
+  }
+
+  async getPlan(id: number): Promise<Plan> {
+    const response = await this.client.get<Plan>(`/plans/${id}`);
+    return response.data;
+  }
+
+  async createPlan(plan: Omit<Plan, 'id'>): Promise<Plan> {
+    const response = await this.client.post<Plan>('/plans', plan);
+    return response.data;
+  }
+
+  async updatePlan(id: number, plan: Partial<Plan>): Promise<Plan> {
+    const response = await this.client.put<Plan>(`/plans/${id}`, plan);
+    return response.data;
+  }
+
+  async deletePlan(id: number): Promise<void> {
+    await this.client.delete(`/plans/${id}`);
+  }
+
+  // User methods
+  async getUsers(page: number, size: number): Promise<UserResponse> {
+    const response = await this.client.get<UserResponse>('/users', {
+      params: { page, size }
+    });
+    return response.data;
+  }
+
+  async getUser(id: number): Promise<User> {
+    const response = await this.client.get<User>(`/users/${id}`);
+    return response.data;
+  }
+
+  async createUser(user: Omit<User, 'id'>): Promise<User> {
+    const response = await this.client.post<User>('/users', user);
+    return response.data;
+  }
+
+  async updateUser(id: number, user: Partial<User>): Promise<User> {
+    const response = await this.client.put<User>(`/users/${id}`, user);
+    return response.data;
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await this.client.delete(`/users/${id}`);
+  }
+
+  async getCurrentUser(): Promise<User> {
+    const response = await this.client.get<User>('/users/me');
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();
 
 // Vehicle endpoints
 export const vehicleApi = {
-  getVehicles: () => apiClient.get('/vehicles/'),
-  getVehicle: (id: number) => apiClient.get(`/vehicles/${id}/`),
-  createVehicle: (data: any) => apiClient.post('/vehicles/', data),
-  updateVehicle: (id: number, data: any) => apiClient.put(`/vehicles/${id}/`, data),
-  deleteVehicle: (id: number) => apiClient.delete(`/vehicles/${id}/`),
+  getVehicles: () => apiClient.getVehicles(1, 10),
+  getVehicle: (id: number) => apiClient.getVehicle(id),
+  createVehicle: (data: any) => apiClient.createVehicle(data),
+  updateVehicle: (id: number, data: any) => apiClient.updateVehicle(id, data),
+  deleteVehicle: (id: number) => apiClient.deleteVehicle(id),
+};
+
+// User endpoints
+export const userApi = {
+  getUsers: () => apiClient.getUsers(1, 10),
+  getUser: (id: number) => apiClient.getUser(id),
+  createUser: (data: any) => apiClient.createUser(data),
+  updateUser: (id: number, data: any) => apiClient.updateUser(id, data),
+  deleteUser: (id: number) => apiClient.deleteUser(id),
+  getCurrentUser: () => apiClient.getCurrentUser(),
+};
+
+// Plans endpoints
+export const plansApi = {
+  getPlans: () => apiClient.getPlans(1, 10),
+  getPlan: (id: number) => apiClient.getPlan(id),
+  createPlan: (data: any) => apiClient.createPlan(data),
+  updatePlan: (id: number, data: any) => apiClient.updatePlan(id, data),
+  deletePlan: (id: number) => apiClient.deletePlan(id),
 };
 
 // Parking records endpoints
@@ -92,11 +224,11 @@ export const vehicleApi = {
 
 // Alerts endpoints
 export const alertApi = {
-  getAlerts: () => apiClient.get('/alerts'),
-  getAlert: (id: number) => apiClient.get(`/alerts/${id}`),
-  createAlert: (data: any) => apiClient.post('/alerts', data),
-  updateAlert: (id: number, data: any) => apiClient.put(`/alerts/${id}`, data),
-  resolveAlert: (id: number) => apiClient.post(`/alerts/${id}/resolve`),
+  getAlerts: () => apiClient.getAlerts(1, 10),
+  getAlert: (id: number) => apiClient.getAlert(id),
+  createAlert: (data: any) => apiClient.createAlert(data),
+  updateAlert: (id: number, data: any) => apiClient.updateAlert(id, data),
+  resolveAlert: (id: number) => apiClient.deleteAlert(id),
 };
 
 export const api = axios.create({
@@ -104,4 +236,113 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-}); 
+});
+
+interface User {
+  id: number;
+  username: string;
+  full_name: string;
+  email: string;
+  type: string;
+}
+
+interface UserResponse {
+  items: User[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+interface Vehicle {
+  id: number;
+  license_plate: string;
+  make: string;
+  model: string;
+  color: string;
+  type: string;
+  owner_id: number;
+  owner: {
+    id: number;
+    email: string;
+    full_name: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+interface VehicleResponse {
+  items: Vehicle[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+interface Alert {
+  id: number;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AlertResponse {
+  items: Alert[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+interface Plan {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  features: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface PlanResponse {
+  items: Plan[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+interface ApiClient {
+  // Vehicle methods
+  getVehicles(page: number, size: number): Promise<VehicleResponse>;
+  getVehicle(id: number): Promise<Vehicle>;
+  createVehicle(vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle>;
+  updateVehicle(id: number, vehicle: Partial<Vehicle>): Promise<Vehicle>;
+  deleteVehicle(id: number): Promise<void>;
+
+  // Alert methods
+  getAlerts(page: number, size: number): Promise<AlertResponse>;
+  getAlert(id: number): Promise<Alert>;
+  createAlert(alert: Omit<Alert, 'id'>): Promise<Alert>;
+  updateAlert(id: number, alert: Partial<Alert>): Promise<Alert>;
+  deleteAlert(id: number): Promise<void>;
+
+  // Plan methods
+  getPlans(page: number, size: number): Promise<PlanResponse>;
+  getPlan(id: number): Promise<Plan>;
+  createPlan(plan: Omit<Plan, 'id'>): Promise<Plan>;
+  updatePlan(id: number, plan: Partial<Plan>): Promise<Plan>;
+  deletePlan(id: number): Promise<void>;
+
+  // User methods
+  getUsers(page: number, size: number): Promise<UserResponse>;
+  getUser(id: number): Promise<User>;
+  createUser(user: Omit<User, 'id'>): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
+  getCurrentUser(): Promise<User>;
+} 
