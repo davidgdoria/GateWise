@@ -204,6 +204,7 @@ export const userApi = {
   deleteUser: (id: number) => apiClient.deleteUser(id),
   getCurrentUser: () => apiClient.getCurrentUser(),
   sendPasswordResetEmail: (id: number) => api.post(`/users/${id}/reset-password-token`),
+  logout: () => api.post('/users/logout'),
 };
 
 // Plans endpoints
