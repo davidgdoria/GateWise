@@ -25,6 +25,7 @@ import EditVehicle from './pages/EditVehicle';
 import Users from './pages/Users';
 import EditUser from './pages/EditUser';
 import ProtectedRoute from './components/ProtectedRoute';
+import AddUser from './pages/AddUser';
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,13 @@ function App() {
               <ProtectedRouteComponent>
                 <Layout>
                   <Users />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/users/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddUser />
                 </Layout>
               </ProtectedRouteComponent>
             } />

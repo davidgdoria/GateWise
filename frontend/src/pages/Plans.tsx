@@ -28,15 +28,44 @@ import Cookies from 'js-cookie';
 interface Plan {
   id: number;
   name: string;
-  value: number;
-  cars: number;
+  price: number;
+  num_spaces: number;
+  description: string;
+  duration_days: number;
+  active: number;
 }
 
+const Plans: React.FC = () => {
+  return (
+    <Layout>
+      <Box sx={{ width: '100%' }}>
+        <Typography variant="h5" fontWeight={600} mb={3}>
+          Plans
+        </Typography>
+        <Typography>
+          Plans management coming soon...
+        </Typography>
+      </Box>
+    </Layout>
+  );
+};
+
+export default Plans;
+
+/* Original implementation commented out for future use
 const Plans: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [form, setForm] = useState<Plan>({ id: 0, name: '', value: 0, cars: 0 });
+  const [form, setForm] = useState<Plan>({
+    id: 0,
+    name: '',
+    price: 0,
+    num_spaces: 0,
+    description: '',
+    duration_days: 30,
+    active: 1
+  });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -52,58 +81,75 @@ const Plans: React.FC = () => {
         return;
       }
       const response = await plansApi.getPlans();
-      setPlans(response as Plan[]);
+      setPlans(response.items);
     } catch (error) {
       console.error('Error fetching plans:', error);
       setError('Failed to fetch plans');
     }
   };
 
-  const handleOpen = (plan?: Plan, idx?: number) => {
-    setOpen(true);
-    if (plan && typeof idx === 'number') {
-      setForm(plan);
-      setEditIndex(idx);
-    } else {
-      setForm({ id: 0, name: '', value: 0, cars: 0 });
-      setEditIndex(null);
-    }
-  };
+  // const handleOpen = (plan?: Plan, idx?: number) => {
+  //   setOpen(true);
+  //   if (plan && typeof idx === 'number') {
+  //     setForm(plan);
+  //     setEditIndex(idx);
+  //   } else {
+  //     setForm({
+  //       id: 0,
+  //       name: '',
+  //       price: 0,
+  //       num_spaces: 0,
+  //       description: '',
+  //       duration_days: 30,
+  //       active: 1
+  //     });
+  //     setEditIndex(null);
+  //   }
+  // };
 
-  const handleClose = () => {
-    setOpen(false);
-    setForm({ id: 0, name: '', value: 0, cars: 0 });
-    setEditIndex(null);
-  };
+  // const handleClose = () => {
+  //   setOpen(false);
+  //   setForm({
+  //     id: 0,
+  //     name: '',
+  //     price: 0,
+  //     num_spaces: 0,
+  //     description: '',
+  //     duration_days: 30,
+  //     active: 1
+  //   });
+  //   setEditIndex(null);
+  // };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+  //   setForm({ ...form, [e.target.name]: value });
+  // };
 
-  const handleSave = async () => {
-    try {
-      if (editIndex !== null) {
-        await plansApi.updatePlan(form.id, form);
-      } else {
-        await plansApi.createPlan(form);
-      }
-      await fetchPlans();
-      handleClose();
-    } catch (error) {
-      console.error('Error saving plan:', error);
-      setError('Failed to save plan');
-    }
-  };
+  // const handleSave = async () => {
+  //   try {
+  //     if (editIndex !== null) {
+  //       await plansApi.updatePlan(form.id, form);
+  //     } else {
+  //       await plansApi.createPlan(form);
+  //     }
+  //     await fetchPlans();
+  //     handleClose();
+  //   } catch (error) {
+  //     console.error('Error saving plan:', error);
+  //     setError('Failed to save plan');
+  //   }
+  // };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await plansApi.deletePlan(id);
-      await fetchPlans();
-    } catch (error) {
-      console.error('Error deleting plan:', error);
-      setError('Failed to delete plan');
-    }
-  };
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     await plansApi.deletePlan(id);
+  //     await fetchPlans();
+  //   } catch (error) {
+  //     console.error('Error deleting plan:', error);
+  //     setError('Failed to delete plan');
+  //   }
+  // };
 
   return (
     <Layout>
@@ -125,47 +171,25 @@ const Plans: React.FC = () => {
             mb: 4,
           }}
         >
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                background: '#222',
-                color: '#fff',
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': { background: '#444' },
-              }}
-              onClick={() => handleOpen()}
-            >
-              New plan
-            </Button>
-          </Box>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
-                  <TableCell>Value</TableCell>
-                  <TableCell>Cars</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell>Price</TableCell>
+                  <TableCell>Spaces</TableCell>
+                  <TableCell>Duration (days)</TableCell>
+                  <TableCell>Description</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {plans.map((plan, index) => (
                   <TableRow key={plan.id}>
                     <TableCell>{plan.name}</TableCell>
-                    <TableCell>${plan.value}</TableCell>
-                    <TableCell>{plan.cars}</TableCell>
-                    <TableCell align="right">
-                      <IconButton onClick={() => handleOpen(plan, index)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => handleDelete(plan.id)}>
-                        <MoreVertIcon />
-                      </IconButton>
-                    </TableCell>
+                    <TableCell>${plan.price}</TableCell>
+                    <TableCell>{plan.num_spaces}</TableCell>
+                    <TableCell>{plan.duration_days}</TableCell>
+                    <TableCell>{plan.description}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -173,46 +197,7 @@ const Plans: React.FC = () => {
           </TableContainer>
         </Box>
       </Box>
-
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editIndex !== null ? 'Edit Plan' : 'New Plan'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            name="name"
-            label="Name"
-            value={form.name}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            name="value"
-            label="Value"
-            type="number"
-            value={form.value}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            name="cars"
-            label="Cars"
-            type="number"
-            value={form.cars}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Layout>
   );
 };
-
-export default Plans; 
+*/ 

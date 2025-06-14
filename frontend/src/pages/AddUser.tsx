@@ -1,40 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
 import Layout from '../components/Layout';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { apiClient, userApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../services/api';
 import Cookies from 'js-cookie';
 
 const userTypes = ['admin', 'user'];
 
-interface User {
-  id: number;
-  username: string;
-  full_name: string;
-  email: string;
-  type: string;
-}
-
-const EditUser: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+const AddUser: React.FC = () => {
   const [formData, setFormData] = useState({
-    id: 0,
     username: '',
     full_name: '',
     email: '',
-    type: 'user'
+    type: ''
   });
-
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (location.state?.user) {
-      setFormData(location.state.user);
-    }
-    setLoading(false);
-  }, [location.state]);
+  const navigate = useNavigate();
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,8 +38,8 @@ const EditUser: React.FC = () => {
     setError('');
 
     // Validate required fields
-    if (!formData.email.trim()) {
-      setError('Email is required.');
+    if (!formData.username.trim() || !formData.email.trim() || !formData.full_name.trim() || !formData.type) {
+      setError('All fields are required.');
       return;
     }
 
@@ -69,49 +50,48 @@ const EditUser: React.FC = () => {
         return;
       }
 
-      await apiClient.updateUser(formData.id, formData);
+      await apiClient.createUser(formData);
       navigate('/users');
     } catch (error) {
       if (error instanceof Error) {
-        setError(error.message || 'Failed to update user. Please try again.');
+        setError(error.message || 'Failed to add user. Please try again.');
       } else {
         setError('An unexpected error occurred.');
       }
-      console.error('Error updating user:', error);
+      console.error('Error adding user:', error);
     }
   };
-
-  const handleSendResetEmail = async () => {
-    try {
-      await userApi.sendPasswordResetEmail(formData.id);
-      setError('');
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || 'Failed to send password reset email.');
-      } else {
-        setError('An unexpected error occurred.');
-      }
-    }
-  };
-
-  if (loading) {
-    return (
-      <Layout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-          <Typography>Loading...</Typography>
-        </Box>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
-            Edit User
+            Add User
           </Typography>
           <form onSubmit={handleSubmit}>
+            <TextField
+              label="Username"
+              name="username"
+              value={formData.username}
+              onChange={handleTextChange}
+              fullWidth
+              margin="normal"
+              required
+              error={!!error && !formData.username.trim()}
+              helperText={!formData.username.trim() && error ? error : ''}
+            />
+            <TextField
+              label="Full Name"
+              name="full_name"
+              value={formData.full_name}
+              onChange={handleTextChange}
+              fullWidth
+              margin="normal"
+              required
+              error={!!error && !formData.full_name.trim()}
+              helperText={!formData.full_name.trim() && error ? error : ''}
+            />
             <TextField
               label="Email"
               name="email"
@@ -121,23 +101,8 @@ const EditUser: React.FC = () => {
               fullWidth
               margin="normal"
               required
-              disabled
-              sx={{ 
-                '& .MuiInputBase-input.Mui-disabled': {
-                  WebkitTextFillColor: '#666',
-                },
-                '& .MuiInputLabel-root.Mui-disabled': {
-                  color: '#666',
-                }
-              }}
-            />
-            <TextField
-              label="Full Name"
-              name="full_name"
-              value={formData.full_name}
-              onChange={handleTextChange}
-              fullWidth
-              margin="normal"
+              error={!!error && !formData.email.trim()}
+              helperText={!formData.email.trim() && error ? error : ''}
             />
             <FormControl fullWidth margin="normal">
               <InputLabel>Type</InputLabel>
@@ -154,18 +119,8 @@ const EditUser: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            <Box sx={{ mt: 2, mb: 3 }}>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleSendResetEmail}
-                sx={{ mr: 2 }}
-              >
-                Send Password Reset Email
-              </Button>
-            </Box>
             {error && <Typography color="error" mb={2}>{error}</Typography>}
-            <Box display="flex" justifyContent="flex-end" gap={2}>
+            <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
               <Button 
                 variant="outlined" 
                 onClick={() => navigate('/users')}
@@ -185,7 +140,7 @@ const EditUser: React.FC = () => {
                   '&:hover': { background: '#444' } 
                 }}
               >
-                Update User
+                Add User
               </Button>
             </Box>
           </form>
@@ -195,4 +150,4 @@ const EditUser: React.FC = () => {
   );
 };
 
-export default EditUser; 
+export default AddUser; 

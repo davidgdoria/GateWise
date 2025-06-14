@@ -11,17 +11,8 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Pagination,
-  SelectChangeEvent,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -56,15 +47,6 @@ const Users: React.FC = () => {
     size: 10,
     pages: 0
   });
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<User>({
-    id: 0,
-    username: '',
-    full_name: '',
-    email: '',
-    type: ''
-  });
-  const [editIndex, setEditIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -88,46 +70,6 @@ const Users: React.FC = () => {
         navigate('/login');
       }
       setError('Failed to fetch users');
-    }
-  };
-
-  const handleOpen = (user?: User) => {
-    setOpen(true);
-    if (user) {
-      setForm(user);
-      setEditIndex(user.id);
-    } else {
-      setForm({ id: 0, username: '', full_name: '', email: '', type: '' });
-      setEditIndex(null);
-    }
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setForm({ id: 0, username: '', full_name: '', email: '', type: '' });
-    setEditIndex(null);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }> | SelectChangeEvent) => {
-    const { name, value } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name as string]: value
-    }));
-  };
-
-  const handleSave = async () => {
-    try {
-      if (editIndex) {
-        await apiClient.updateUser(editIndex, form);
-      } else {
-        await apiClient.createUser(form);
-      }
-      handleClose();
-      fetchUsers();
-    } catch (error) {
-      console.error('Error saving user:', error);
-      setError('Failed to save user');
     }
   };
 
@@ -155,10 +97,10 @@ const Users: React.FC = () => {
         </Typography>
 
         <Paper sx={{ p: 3, borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
             <Button
               variant="contained"
-              onClick={() => handleOpen()}
+              onClick={() => navigate('/users/add')}
               startIcon={<AddIcon />}
               sx={{
                 background: '#222',
@@ -198,12 +140,23 @@ const Users: React.FC = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.type}</TableCell>
                     <TableCell align="right">
-                      <IconButton onClick={() => handleOpen(user)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => handleDelete(user.id)}>
-                        <DeleteIcon />
-                      </IconButton>
+                      <Tooltip title="Edit">
+                        <IconButton 
+                          onClick={() => navigate(`/users/edit/${user.id}`, { state: { user } })}
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton 
+                          onClick={() => handleDelete(user.id)}
+                          size="small"
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -228,52 +181,6 @@ const Users: React.FC = () => {
             </Box>
           )}
         </Paper>
-
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle>{editIndex ? 'Edit User' : 'Add User'}</DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-              <TextField
-                name="username"
-                label="Username"
-                value={form.username}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                name="full_name"
-                label="Full Name"
-                value={form.full_name}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                name="email"
-                label="Email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                fullWidth
-              />
-              <FormControl fullWidth>
-                <InputLabel>Type</InputLabel>
-                <Select
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  label="Type"
-                >
-                  <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="user">User</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleSave} variant="contained">Save</Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </Layout>
   );
