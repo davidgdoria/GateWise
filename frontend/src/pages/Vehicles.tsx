@@ -25,6 +25,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
 interface Owner {
   id: number;
@@ -74,7 +75,7 @@ const Vehicles: React.FC = () => {
           return;
         }
 
-        const response = await axios.get<VehicleResponse>('http://localhost:8000/api/v1/vehicles', {
+        const response = await axios.get<VehicleResponse>(`${API_BASE_URL}/api/v1/vehicles`, {
           headers: {
             'Authorization': `Bearer ${token}`
           },

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper } from '@mui/material';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
 const statusOptions = ['Active', 'Expired'];
 
@@ -13,16 +16,34 @@ const AddSubscription: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!plan.trim() || !status || !nextPayment || !amount.trim()) {
       setError('All fields are required.');
       return;
     }
-    // Here you would send the data to your backend or state management
-    // For now, just navigate back to subscriptions
     setError('');
-    navigate('/subscriptions');
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      await axios.post(`${API_BASE_URL}/api/v1/subscriptions/`, {
+        plan,
+        status,
+        next_payment: nextPayment,
+        amount: parseFloat(amount)
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      navigate('/subscriptions');
+    } catch (err) {
+      setError('Failed to add subscription.');
+    }
   };
 
   return (

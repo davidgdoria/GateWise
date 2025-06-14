@@ -26,6 +26,8 @@ import Users from './pages/Users';
 import EditUser from './pages/EditUser';
 import ProtectedRoute from './components/ProtectedRoute';
 import AddUser from './pages/AddUser';
+import AddPlan from './pages/AddPlan';
+import EditPlan from './pages/EditPlan';
 
 const queryClient = new QueryClient();
 
@@ -183,6 +185,20 @@ function App() {
               <ProtectedRouteComponent>
                 <Layout>
                   <Plans />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/plans/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddPlan />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/plans/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditPlan />
                 </Layout>
               </ProtectedRouteComponent>
             } />
