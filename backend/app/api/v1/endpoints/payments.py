@@ -27,11 +27,20 @@ async def create_payment(
     # Valida se amount é igual ao preço da subscrição
     if payment.amount != subscription.price_at_subscription:
         raise HTTPException(status_code=400, detail=f"Payment amount must match subscription price: {subscription.price_at_subscription}")
+    # Não permite pagar a mesma subscription mais de uma vez
+    existing_payment = await db.execute(
+        select(Payment).where(
+            Payment.subscription_id == payment.subscription_id
+        )
+    )
+    if existing_payment.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Payment for this subscription already exists")
+    now = datetime.utcnow()
     # Cria o pagamento
     p = Payment(
         subscription_id=payment.subscription_id,
         amount=payment.amount,
-        paid_at=datetime.utcnow(),
+        paid_at=now,
         status="paid"
     )
     db.add(p)
