@@ -99,24 +99,80 @@ const EditUser: React.FC = () => {
       <Layout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
           <Typography>Loading...</Typography>
-        </Box>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
-      <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-        <Paper sx={{ p: 4, borderRadius: 4 }}>
-          <Typography variant="h5" fontWeight={600} mb={3}>
-            Edit User
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
+    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8 }}>
+      <Paper sx={{ p: 4, borderRadius: 4 }}>
+        <Typography variant="h4" fontWeight={700} mb={3}>
+          Edit User
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleTextChange}
+            fullWidth
+            margin="normal"
+            required
+            disabled
+            sx={{ 
+              '& .MuiInputBase-input.Mui-disabled': {
+                WebkitTextFillColor: '#666',
+              },
+              '& .MuiInputLabel-root.Mui-disabled': {
+                color: '#666',
+              }
+            }}
+          />
+          <TextField
+            label="Full Name"
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleTextChange}
+            fullWidth
+            margin="normal"
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Type</InputLabel>
+            <Select
+              name="type"
+              value={formData.type}
+              label="Type"
+              onChange={handleSelectChange}
+            >
+              {userTypes.map(type => (
+                <MenuItem key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Box sx={{ mt: 2, mb: 3 }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleSendResetEmail}
+              sx={{ mr: 2 }}
+            >
+              Send Password Reset Email
+            </Button>
+          </Box>
+          {error && <Typography color="error" mb={2}>{error}</Typography>}
+          <Box display="flex" justifyContent="flex-end" gap={2}>
+            <Button 
+              variant="outlined" 
+              onClick={() => navigate('/users')}
+              sx={{ borderRadius: 2, textTransform: 'none' }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              type="submit"
               onChange={handleTextChange}
               fullWidth
               margin="normal"

@@ -41,8 +41,7 @@ const Reports: React.FC = () => {
   const [date, setDate] = useState('2025-10-05');
   const [search, setSearch] = useState('');
   return (
-    <Layout>
-      <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }}>
         <Typography variant="h5" fontWeight={600} mb={3}>
           Reports
         </Typography>
@@ -160,7 +159,6 @@ const Reports: React.FC = () => {
           </Box>
         </Box>
       </Box>
-    </Layout>
   );
 };
 

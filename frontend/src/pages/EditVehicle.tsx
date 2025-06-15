@@ -139,23 +139,48 @@ const EditVehicle: React.FC = () => {
       <Layout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
           <Typography>Loading...</Typography>
-        </Box>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
-      <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-        <Paper sx={{ p: 4, borderRadius: 4 }}>
-          <Typography variant="h5" fontWeight={600} mb={3}>
-            Edit Vehicle
-          </Typography>
-          <form onSubmit={handleSubmit}>
+    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8 }}>
+      <Paper sx={{ p: 4, borderRadius: 4 }}>
+        <Typography variant="h4" fontWeight={700} mb={3}>
+          Edit Vehicle
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="License Plate"
+            name="license_plate"
+            value={formData.license_plate}
+            onChange={handleTextChange}
+            fullWidth
+            margin="normal"
+            required
+            error={!!error && !formData.license_plate.trim()}
+            helperText={!formData.license_plate.trim() && error ? error : ''}
+          />
+          <TextField
+            label="Make"
+            name="make"
+            value={formData.make}
+            onChange={handleTextChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Model"
+            name="model"
+            value={formData.model}
+            onChange={handleTextChange}
+            fullWidth
+            margin="normal"
+          />
+          {showCustomColor ? (
             <TextField
-              label="License Plate"
-              name="license_plate"
-              value={formData.license_plate}
+              label="Custom Color"
+              name="color"
+              value={formData.color}
               onChange={handleTextChange}
               fullWidth
               margin="normal"

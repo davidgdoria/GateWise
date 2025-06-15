@@ -121,18 +121,102 @@ const AddSubscription: React.FC = () => {
   };
 
   return (
-    <Layout>
-      <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
-        <Paper sx={{ p: 4, borderRadius: 4 }}>
-          <Typography variant="h5" fontWeight={600} mb={3}>
-            Add Subscription
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>User</InputLabel>
-              <Select
-                name="user_id"
-                value={form.user_id}
+    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8 }}>
+      <Paper sx={{ p: 4, borderRadius: 4 }}>
+        <Typography variant="h4" fontWeight={700} mb={3}>
+          Add Subscription
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <FormControl fullWidth margin="normal" required>
+            <InputLabel>User</InputLabel>
+            <Select
+              name="user_id"
+              value={form.user_id}
+              label="User"
+              onChange={handleSelectChange}
+            >
+              {users.map((user: User) => (
+                <MenuItem key={user.id} value={user.id}>{user.full_name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal" required>
+            <InputLabel>Plan</InputLabel>
+            <Select
+              name="plan_id"
+              value={form.plan_id}
+              label="Plan"
+              onChange={handleSelectChange}
+            >
+              {plans.map((plan: Plan) => (
+                <MenuItem key={plan.id} value={plan.id}>{plan.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal" required>
+            <InputLabel>Status</InputLabel>
+            <Select
+              name="status"
+              value={form.status}
+              label="Status"
+              onChange={handleSelectChange}
+            >
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="inactive">Inactive</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            label="Start Date"
+            name="start_date"
+            value={form.start_date}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="End Date"
+            name="end_date"
+            value={form.end_date}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Spaces Allocated"
+            name="spaces_allocated"
+            value={form.spaces_allocated}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            type="number"
+            inputProps={{ min: 1 }}
+            disabled
+          />
+          <TextField
+            label="Price at Subscription"
+            name="price_at_subscription"
+            value={form.price_at_subscription}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            type="number"
+            inputProps={{ min: 0 }}
+            disabled
+          />
+          {error && <Typography color="error" mb={2}>{error}</Typography>}
+          <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
+            <Button variant="outlined" color="secondary" onClick={() => navigate('/subscriptions')}>Cancel</Button>
+            <Button variant="contained" type="submit" sx={{ background: '#222', color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, '&:hover': { background: '#444' } }}>
+              Add Subscription
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Box>
                 label="User"
                 onChange={handleSelectChange}
               >
