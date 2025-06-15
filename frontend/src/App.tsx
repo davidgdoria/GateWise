@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from './theme';

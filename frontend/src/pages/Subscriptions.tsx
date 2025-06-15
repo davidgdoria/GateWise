@@ -17,31 +17,41 @@ import {
   Chip,
   IconButton,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CancelIcon from '@mui/icons-material/Cancel';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
 
-const statusColor = (status: string) => {
-  if (status === 'active') return { label: 'Active', color: 'success', sx: { background: '#4caf50', color: '#fff', fontWeight: 700 } };
-  if (status === 'expired') return { label: 'Expired', color: 'error', sx: { background: '#ef5350', color: '#fff', fontWeight: 700 } };
-  return { label: status, color: 'default', sx: {} };
-};
-
 interface Subscription {
   id: number;
   user_id: number;
-  vehicle_id: number;
-  type: string;
+  plan_id: number;
   start_date: string;
   end_date: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  status: string;
+  cancellation_date: string | null;
+  spaces_allocated: number;
+  price_at_subscription: number;
+}
+
+interface User {
+  id: number;
+  full_name: string;
+}
+
+interface Plan {
+  id: number;
+  name: string;
 }
 
 interface SubscriptionResponse {
@@ -61,12 +71,16 @@ const Subscriptions: React.FC = () => {
     size: 10,
     pages: 0
   });
+  const [users, setUsers] = useState<User[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [subscriptionToDelete, setSubscriptionToDelete] = useState<Subscription | null>(null);
 
   useEffect(() => {
-    const fetchSubscriptions = async () => {
+    const fetchAll = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -75,24 +89,78 @@ const Subscriptions: React.FC = () => {
           navigate('/login');
           return;
         }
-        const response = await axios.get(`${API_BASE_URL}/api/v1/subscriptions/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          params: {
-            page: page,
-            size: 10
-          }
-        });
-        setData(response.data);
+        const [subsRes, usersRes, plansRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/v1/subscriptions/`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            params: { page, size: 10 }
+          }),
+          axios.get(`${API_BASE_URL}/api/v1/users/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          axios.get(`${API_BASE_URL}/api/v1/plans/`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            params: { size: 1000 }
+          })
+        ]);
+        setData(subsRes.data);
+        setUsers(usersRes.data.items || usersRes.data); // handle both array and paginated
+        setPlans(plansRes.data.items || plansRes.data); // handle both array and paginated
       } catch (err) {
-        setError('Failed to fetch subscriptions');
+        setError('Failed to fetch subscriptions, users, or plans');
       } finally {
         setLoading(false);
       }
     };
-    fetchSubscriptions();
+    fetchAll();
   }, [page, navigate]);
+
+  const getUserName = (user_id: number) => {
+    const user = users.find(u => u.id === user_id);
+    return user ? user.full_name : user_id;
+  };
+
+  const getPlanName = (plan_id: number) => {
+    const plan = plans.find(p => p.id === plan_id);
+    return plan ? plan.name : plan_id;
+  };
+
+  const handleCancelClick = (sub: Subscription) => {
+    setSubscriptionToDelete(sub);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!subscriptionToDelete) return;
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+      await axios.post(`${API_BASE_URL}/api/v1/subscriptions/${subscriptionToDelete.id}/cancel`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      setData({
+        ...data,
+        items: data.items.map(sub => 
+          sub.id === subscriptionToDelete.id 
+            ? { ...sub, status: 'inactive' }
+            : sub
+        )
+      });
+      setDeleteDialogOpen(false);
+      setSubscriptionToDelete(null);
+    } catch (err) {
+      alert('Failed to cancel subscription.');
+    }
+  };
+
+  const handleCancelDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setSubscriptionToDelete(null);
+  };
 
   return (
     <Layout>
@@ -148,30 +216,37 @@ const Subscriptions: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>ID</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Start Date</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>End Date</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Spaces Allocated</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}></TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.items.map((sub) => (
+                  {Array.isArray(data.items) && data.items.map((sub: Subscription) => (
                     <TableRow key={sub.id}>
-                      <TableCell>{sub.id}</TableCell>
-                      <TableCell>{sub.type}</TableCell>
-                      <TableCell>{new Date(sub.start_date).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(sub.end_date).toLocaleDateString()}</TableCell>
+                      <TableCell>{getUserName(sub.user_id)}</TableCell>
+                      <TableCell>{getPlanName(sub.plan_id)}</TableCell>
+                      <TableCell>{sub.spaces_allocated}</TableCell>
                       <TableCell>
                         <Chip
-                          label={sub.is_active ? 'Active' : 'Expired'}
-                          sx={{ ...statusColor(sub.is_active ? 'active' : 'expired').sx, borderRadius: 1, fontWeight: 700, fontSize: 15, px: 2 }}
+                          label={sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                          color={sub.status === 'active' ? 'success' : 'default'}
+                          sx={{ fontWeight: 700, fontSize: 15, px: 2 }}
                           size="small"
                         />
                       </TableCell>
-                      <TableCell align="center">
-                        <IconButton size="small" sx={{ color: '#222' }}><MoreVertIcon /></IconButton>
+                      <TableCell>
+                        {sub.status === 'active' && (
+                          <IconButton 
+                            size="small" 
+                            onClick={() => handleCancelClick(sub)} 
+                            sx={{ color: 'warning.main' }}
+                          >
+                            <CancelIcon />
+                          </IconButton>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -195,8 +270,18 @@ const Subscriptions: React.FC = () => {
           </Box>
         </Box>
       </Box>
+      <Dialog open={deleteDialogOpen} onClose={handleCancelDialogClose}>
+        <DialogTitle>Cancel Subscription</DialogTitle>
+        <DialogContent>
+          Are you sure you want to cancel this subscription? This action cannot be undone.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDialogClose} color="secondary">No, keep it</Button>
+          <Button onClick={handleCancelConfirm} color="warning" variant="contained">Yes, cancel it</Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 };
 
-export default Subscriptions; 
+export default Subscriptions;
