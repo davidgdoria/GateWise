@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.parking_space import ParkingSpace
@@ -42,10 +43,17 @@ async def create_parking_space(
 
 @router.get("/", response_model=Page[ParkingSpaceOut])
 async def list_parking_spaces(
+    is_allocated: Optional[bool] = Query(None),
+    name: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(admin_required)
 ):
-    result = await db.execute(select(ParkingSpace))
+    query = select(ParkingSpace)
+    if is_allocated is not None:
+        query = query.where(ParkingSpace.is_allocated == is_allocated)
+    if name:
+        query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
+    result = await db.execute(query)
     parking_spaces = result.scalars().all()
     return paginate(parking_spaces)
 
