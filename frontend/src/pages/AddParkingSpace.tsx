@@ -105,17 +105,7 @@ const AddParkingSpace: React.FC = () => {
         </form>
       </Paper>
     </Box>
-                  color="primary"
-                />
-              }
-              label="Allocated"
-              sx={{ mt: 2 }}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={form.is_occupied}
-                  onChange={handleChange}
+
                   name="is_occupied"
                   color="primary"
                 />
