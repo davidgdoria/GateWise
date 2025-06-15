@@ -96,9 +96,10 @@ const EditPlan: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
     );
   }
 

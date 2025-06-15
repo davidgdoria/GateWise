@@ -217,17 +217,7 @@ const AddSubscription: React.FC = () => {
         </form>
       </Paper>
     </Box>
-                label="User"
-                onChange={handleSelectChange}
-              >
-                {users.map((user: User) => (
-                  <MenuItem key={user.id} value={user.id}>{user.full_name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>Plan</InputLabel>
-              <Select
+
                 name="plan_id"
                 value={form.plan_id}
                 label="Plan"

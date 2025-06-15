@@ -8,11 +8,10 @@ const Payments: React.FC = () => {
       <Typography variant="h4" fontWeight={700} mb={2}>
         Payments
       </Typography>
-        <Typography variant="body1" color="text.secondary">
-          This page is under construction. Please check back soon!
-        </Typography>
-      </Box>
-    </Layout>
+      <Typography variant="body1" color="text.secondary">
+        This page is under construction. Please check back soon!
+      </Typography>
+    </Box>
   );
 };
 

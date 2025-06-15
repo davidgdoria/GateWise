@@ -138,17 +138,7 @@ const AddPlan: React.FC = () => {
         </form>
       </Paper>
     </Box>
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-              required
-              type="number"
-              inputProps={{ min: 1 }}
-            />
-            <TextField
-              label="Description"
-              name="description"
-              value={form.description}
+
               onChange={handleChange}
               fullWidth
               margin="normal"
