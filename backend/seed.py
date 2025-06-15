@@ -168,7 +168,7 @@ async def seed_subscriptions_and_allocations():
                 end_date = start_date + timedelta(days=plan.duration_days)
                 price = plan.price
                 result = await session.execute(select(Subscription).where(Subscription.user_id == user.id))
-                if not result.scalar_one_or_none():
+                if not result.first():
                     sub = Subscription(
                         user_id=user.id,
                         plan_id=plan.id,
