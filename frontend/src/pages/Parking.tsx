@@ -120,7 +120,7 @@ const ParkingSpaces: React.FC = () => {
   return (
     <Layout>
       <Box sx={{ maxWidth: '100%', ml: 0, mt: 0, pl: 0 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={600}>
             Parking Spaces
           </Typography>

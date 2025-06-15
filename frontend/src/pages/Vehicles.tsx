@@ -112,28 +112,27 @@ const Vehicles: React.FC = () => {
   return (
     <Layout>
       <Box sx={{ p: 4 }}>
-        <Typography variant="h4" fontWeight={600} mb={4}>
-          Vehicles
-        </Typography>
-
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" fontWeight={600}>
+            Vehicles
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/vehicles/add')}
+            sx={{
+              background: '#222',
+              color: '#fff',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { background: '#444' }
+            }}
+          >
+            Add Vehicle
+          </Button>
+        </Box>
         <Paper sx={{ p: 3, borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
-            <Button
-              variant="contained"
-              onClick={() => navigate('/vehicles/add')}
-              sx={{
-                background: '#222',
-                color: '#fff',
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': { background: '#444' }
-              }}
-            >
-              Add Vehicle
-            </Button>
-          </Box>
-
           {error && (
             <Typography color="error" mb={2}>
               {error}

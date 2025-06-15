@@ -165,9 +165,26 @@ const Subscriptions: React.FC = () => {
   return (
     <Layout>
       <Box sx={{ maxWidth: '100%', ml: 0, mt: 0, pl: 0 }}>
-        <Typography variant="h5" fontWeight={600} mb={3}>
-          Subscriptions
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h5" fontWeight={600}>
+            Subscriptions
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{
+              background: '#222',
+              color: '#fff',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { background: '#444' },
+            }}
+            onClick={() => navigate('/subscriptions/add')}
+          >
+            New subscription
+          </Button>
+        </Box>
         <Box
           sx={{
             background: '#fff',
@@ -178,32 +195,15 @@ const Subscriptions: React.FC = () => {
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                background: '#222',
-                color: '#fff',
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': { background: '#444' },
-              }}
-              onClick={() => navigate('/subscriptions/add')}
-            >
-              New subscription
+            <Button variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
+              Export data
             </Button>
-            <Box display="flex" gap={2}>
-              <Button variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
-                Export data
-              </Button>
-              <FormControl size="small">
-                <Select defaultValue="id" sx={{ borderRadius: 2, fontWeight: 500 }}>
-                  <MenuItem value="id">Sort by: ID</MenuItem>
-                  <MenuItem value="plan">Sort by: Plan</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+            <FormControl size="small">
+              <Select defaultValue="id" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                <MenuItem value="id">Sort by: ID</MenuItem>
+                <MenuItem value="plan">Sort by: Plan</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">

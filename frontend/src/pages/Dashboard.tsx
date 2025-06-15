@@ -200,7 +200,7 @@ export default function Dashboard() {
               transition: 'box-shadow 0.2s',
               '&:hover': { boxShadow: 4 },
             }}
-            onClick={() => navigate('/parking')}
+            onClick={() => navigate('/parking-spaces')}
           >
             <CardContent>
               <Box display="flex" alignItems="center" mb={1}>

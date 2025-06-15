@@ -116,9 +116,26 @@ const Plans: React.FC = () => {
   return (
     <Layout>
       <Box sx={{ maxWidth: '100%', ml: 0, mt: 0, pl: 0 }}>
-        <Typography variant="h5" fontWeight={600} mb={3}>
-          Plans
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h5" fontWeight={600}>
+            Plans
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{
+              background: '#222',
+              color: '#fff',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { background: '#444' },
+            }}
+            onClick={() => navigate('/plans/add')}
+          >
+            Add Plan
+          </Button>
+        </Box>
         <Box
           sx={{
             background: '#fff',
@@ -128,23 +145,6 @@ const Plans: React.FC = () => {
             mb: 4,
           }}
         >
-          <Box display="flex" justifyContent="flex-start" mb={2}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                background: '#222',
-                color: '#fff',
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': { background: '#444' },
-              }}
-              onClick={() => navigate('/plans/add')}
-            >
-              Add Plan
-            </Button>
-          </Box>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
               <CircularProgress />
