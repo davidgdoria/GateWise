@@ -60,11 +60,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', background: '#f7f7f7', minHeight: '100vh', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', background: '#f7f7f7', minHeight: '100vh', overflow: 'hidden' }} data-debug="Layout-Root-Box">
       <CssBaseline />
       {/* Sidebar */}
       <Drawer
         variant="permanent"
+        data-debug="Layout-Drawer"
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -127,6 +128,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main content */}
       <Box
         component="main"
+        data-debug="Layout-MainContent"
         sx={{
           flexGrow: 1,
           p: 4,
