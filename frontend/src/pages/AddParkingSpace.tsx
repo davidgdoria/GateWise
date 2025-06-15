@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper, FormControlLabel, Checkbox } from '@mui/material';
-import Layout from '../components/Layout';
+// Layout import removed as it's no longer used.
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -105,25 +105,6 @@ const AddParkingSpace: React.FC = () => {
         </form>
       </Paper>
     </Box>
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Description"
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={form.is_allocated}
-                  onChange={handleChange}
-                  name="is_allocated"
                   color="primary"
                 />
               }

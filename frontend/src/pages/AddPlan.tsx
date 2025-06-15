@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper, Checkbox, FormControlLabel } from '@mui/material';
-import Layout from '../components/Layout';
+// Layout import removed as it's no longer used.
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -138,25 +138,6 @@ const AddPlan: React.FC = () => {
         </form>
       </Paper>
     </Box>
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Price"
-              name="price"
-              value={form.price}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-              required
-              type="number"
-              inputProps={{ min: 0 }}
-            />
-            <TextField
-              label="Num Spaces"
-              name="num_spaces"
-              value={form.num_spaces}
               onChange={handleChange}
               fullWidth
               margin="normal"

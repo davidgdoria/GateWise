@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
-import Layout from '../components/Layout';
+// Layout import removed as it's no longer used.
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { apiClient } from '../services/api';
@@ -184,43 +184,8 @@ const EditVehicle: React.FC = () => {
               onChange={handleTextChange}
               fullWidth
               margin="normal"
-              required
-              error={!!error && !formData.license_plate.trim()}
-              helperText={!formData.license_plate.trim() && error ? error : ''}
             />
-            <TextField
-              label="Make"
-              name="make"
-              value={formData.make}
-              onChange={handleTextChange}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Model"
-              name="model"
-              value={formData.model}
-              onChange={handleTextChange}
-              fullWidth
-              margin="normal"
-            />
-            {showCustomColor ? (
-              <TextField
-                label="Custom Color"
-                name="color"
-                value={formData.color}
-                onChange={handleTextChange}
-                fullWidth
-                margin="normal"
-              />
-            ) : (
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Color</InputLabel>
-                <Select
-                  name="color"
-                  value={formData.color}
-                  label="Color"
-                  onChange={handleSelectChange}
+          ) : (
                 >
                   {commonColors.map(color => (
                     <MenuItem key={color} value={color}>

@@ -146,7 +146,6 @@ const AddUser: React.FC = () => {
       </Paper>
     </Box>
   );
-  );
 };
 
-export default AddUser; 
+export default AddUser;

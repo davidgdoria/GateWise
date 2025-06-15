@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
-import Layout from '../components/Layout';
+// Layout import removed as it's no longer used.
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiClient, userApi } from '../services/api';
 import Cookies from 'js-cookie';
@@ -174,81 +174,22 @@ const EditUser: React.FC = () => {
               variant="contained" 
               type="submit"
               onChange={handleTextChange}
-              fullWidth
-              margin="normal"
-              required
-              disabled
               sx={{ 
-                '& .MuiInputBase-input.Mui-disabled': {
-                  WebkitTextFillColor: '#666',
-                },
-                '& .MuiInputLabel-root.Mui-disabled': {
-                  color: '#666',
-                }
+                background: '#222', 
+                color: '#fff', 
+                borderRadius: 2, 
+                textTransform: 'none', 
+                fontWeight: 600, 
+                '&:hover': { background: '#444' } 
               }}
-            />
-            <TextField
-              label="Full Name"
-              name="full_name"
-              value={formData.full_name}
-              onChange={handleTextChange}
-              fullWidth
-              margin="normal"
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Type</InputLabel>
-              <Select
-                name="type"
-                value={formData.type}
-                label="Type"
-                onChange={handleSelectChange}
-              >
-                {userTypes.map(type => (
-                  <MenuItem key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Box sx={{ mt: 2, mb: 3 }}>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleSendResetEmail}
-                sx={{ mr: 2 }}
-              >
-                Send Password Reset Email
-              </Button>
-            </Box>
-            {error && <Typography color="error" mb={2}>{error}</Typography>}
-            <Box display="flex" justifyContent="flex-end" gap={2}>
-              <Button 
-                variant="outlined" 
-                onClick={() => navigate('/users')}
-                sx={{ borderRadius: 2, textTransform: 'none' }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="contained" 
-                type="submit"
-                sx={{ 
-                  background: '#222', 
-                  color: '#fff', 
-                  borderRadius: 2, 
-                  textTransform: 'none', 
-                  fontWeight: 600, 
-                  '&:hover': { background: '#444' } 
-                }}
-              >
-                Update User
-              </Button>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Layout>
+            >
+              Update User
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Box>
   );
 };
 
-export default EditUser; 
+export default EditUser;
