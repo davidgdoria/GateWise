@@ -29,7 +29,9 @@ import {
   Logout as LogoutIcon,
   People as PeopleIcon,
   LocalParking as ParkingIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
 } from '@mui/icons-material';
+import authService from '../services/authService';
 
 const drawerWidth = 200;
 
@@ -41,10 +43,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
+  };
+
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Vehicles', icon: <DirectionsCarIcon />, path: '/vehicles' },
     { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
+    { text: 'Plans', icon: <AssignmentTurnedInIcon />, path: '/plans' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
     { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
     { text: 'Users', icon: <PeopleIcon />, path: '/users' },
@@ -110,7 +118,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItemIcon sx={{ color: '#b3c6e0' }}><ContactIcon /></ListItemIcon>
             <ListItemText primary="Contact us" />
           </ListItem>
-          <ListItem button onClick={() => navigate('/')}>
+          <ListItem button onClick={handleLogout}>
             <ListItemIcon sx={{ color: '#b3c6e0' }}><LogoutIcon /></ListItemIcon>
             <ListItemText primary="Log out" />
           </ListItem>

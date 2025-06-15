@@ -2,31 +2,18 @@ import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { apiClient } from '../services/api';
 import Cookies from 'js-cookie';
 
-const vehicleTypes = ['Car', 'Motorcycle'];
-const commonColors = [
-  'Black',
-  'White',
-  'Silver',
-  'Gray',
-  'Red',
-  'Blue',
-  'Green',
-  'Yellow',
-  'Other'
-];
+const userTypes = ['admin', 'user'];
 
-const AddVehicle: React.FC = () => {
+const AddUser: React.FC = () => {
   const [formData, setFormData] = useState({
-    license_plate: '',
-    make: '',
-    model: '',
-    color: '',
-    type: 'Car'
+    username: '',
+    full_name: '',
+    email: '',
+    type: ''
   });
-  const [showCustomColor, setShowCustomColor] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -40,25 +27,10 @@ const AddVehicle: React.FC = () => {
 
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
-    
-    if (name === 'color' && value === 'Other') {
-      setShowCustomColor(true);
-      setFormData(prev => ({
-        ...prev,
-        color: ''
-      }));
-    } else if (name === 'color') {
-      setShowCustomColor(false);
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,8 +38,8 @@ const AddVehicle: React.FC = () => {
     setError('');
 
     // Validate required fields
-    if (!formData.license_plate.trim()) {
-      setError('License plate is required.');
+    if (!formData.username.trim() || !formData.email.trim() || !formData.full_name.trim() || !formData.type) {
+      setError('All fields are required.');
       return;
     }
 
@@ -78,21 +50,15 @@ const AddVehicle: React.FC = () => {
         return;
       }
 
-      await axios.post('http://localhost:8000/api/v1/vehicles', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      navigate('/vehicles');
+      await apiClient.createUser(formData);
+      navigate('/users');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.detail || 'Failed to add vehicle. Please try again.');
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to add user. Please try again.');
       } else {
         setError('An unexpected error occurred.');
       }
-      console.error('Error adding vehicle:', error);
+      console.error('Error adding user:', error);
     }
   };
 
@@ -101,62 +67,43 @@ const AddVehicle: React.FC = () => {
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
-            Add Vehicle
+            Add User
           </Typography>
           <form onSubmit={handleSubmit}>
             <TextField
-              label="License Plate"
-              name="license_plate"
-              value={formData.license_plate}
+              label="Username"
+              name="username"
+              value={formData.username}
               onChange={handleTextChange}
               fullWidth
               margin="normal"
               required
-              error={!!error && !formData.license_plate.trim()}
-              helperText={!formData.license_plate.trim() && error ? error : ''}
+              error={!!error && !formData.username.trim()}
+              helperText={!formData.username.trim() && error ? error : ''}
             />
             <TextField
-              label="Make"
-              name="make"
-              value={formData.make}
+              label="Full Name"
+              name="full_name"
+              value={formData.full_name}
               onChange={handleTextChange}
               fullWidth
               margin="normal"
+              required
+              error={!!error && !formData.full_name.trim()}
+              helperText={!formData.full_name.trim() && error ? error : ''}
             />
             <TextField
-              label="Model"
-              name="model"
-              value={formData.model}
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
               onChange={handleTextChange}
               fullWidth
               margin="normal"
+              required
+              error={!!error && !formData.email.trim()}
+              helperText={!formData.email.trim() && error ? error : ''}
             />
-            {showCustomColor ? (
-              <TextField
-                label="Custom Color"
-                name="color"
-                value={formData.color}
-                onChange={handleTextChange}
-                fullWidth
-                margin="normal"
-              />
-            ) : (
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Color</InputLabel>
-                <Select
-                  name="color"
-                  value={formData.color}
-                  label="Color"
-                  onChange={handleSelectChange}
-                >
-                  {commonColors.map(color => (
-                    <MenuItem key={color} value={color}>
-                      {color}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
             <FormControl fullWidth margin="normal">
               <InputLabel>Type</InputLabel>
               <Select
@@ -165,9 +112,9 @@ const AddVehicle: React.FC = () => {
                 label="Type"
                 onChange={handleSelectChange}
               >
-                {vehicleTypes.map(type => (
+                {userTypes.map(type => (
                   <MenuItem key={type} value={type}>
-                    {type}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </MenuItem>
                 ))}
               </Select>
@@ -176,7 +123,7 @@ const AddVehicle: React.FC = () => {
             <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
               <Button 
                 variant="outlined" 
-                onClick={() => navigate('/vehicles')}
+                onClick={() => navigate('/users')}
                 sx={{ borderRadius: 2, textTransform: 'none' }}
               >
                 Cancel
@@ -193,7 +140,7 @@ const AddVehicle: React.FC = () => {
                   '&:hover': { background: '#444' } 
                 }}
               >
-                Add Vehicle
+                Add User
               </Button>
             </Box>
           </form>
@@ -203,4 +150,4 @@ const AddVehicle: React.FC = () => {
   );
 };
 
-export default AddVehicle; 
+export default AddUser; 

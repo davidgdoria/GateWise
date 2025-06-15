@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from './theme';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
@@ -19,14 +19,49 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ContactUsInternal from './pages/ContactUsInternal';
 import Help from './pages/Help';
+import Plans from './pages/Plans';
+import Cookies from 'js-cookie';
+import EditVehicle from './pages/EditVehicle';
 import Users from './pages/Users';
-import ParkingSpaces from './pages/ParkingSpaces';
+import EditUser from './pages/EditUser';
+import ProtectedRoute from './components/ProtectedRoute';
+import AddUser from './pages/AddUser';
+import AddPlan from './pages/AddPlan';
+import EditPlan from './pages/EditPlan';
+import ParkingSpaces from './pages/Parking';
+import AddParkingSpace from './pages/AddParkingSpace';
+import EditParkingSpace from './pages/EditParkingSpace';
 
 const queryClient = new QueryClient();
 
+const adminOnlyRoutes = [
+  '/vehicles/add', '/alerts', '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
+];
+
 // Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // BYPASS: permitir acesso sempre durante desenvolvimento
+const ProtectedRouteComponent = ({ children }: { children: React.ReactNode }) => {
+  const location = window.location.pathname;
+  const userType = Cookies.get('user_type');
+
+  // All users can access dashboard, vehicles, subscriptions
+  if (
+    location.startsWith('/dashboard') ||
+    location.startsWith('/vehicles') && location !== '/vehicles/add' ||
+    location.startsWith('/subscriptions') && location !== '/subscriptions/add'
+  ) {
+    return <>{children}</>;
+  }
+
+  // Only admins can access adminOnlyRoutes
+  if (adminOnlyRoutes.some((route) => location.startsWith(route))) {
+    if (userType === 'admin') {
+      return <>{children}</>;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  // Default: allow
   return <>{children}</>;
 };
 
@@ -39,101 +74,157 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<Login />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Dashboard />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/vehicles" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Vehicles />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/vehicles/add" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <AddVehicle />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/vehicles/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditVehicle />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/users" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <Users />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/users/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddUser />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/users/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditUser />
+                </Layout>
+              </ProtectedRouteComponent>
             } />
             <Route path="/alerts" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Alerts />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/settings" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Settings />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/subscriptions" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Subscriptions />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/subscriptions/add" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <AddSubscription />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/reports" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Reports />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/payments" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Payments />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/dashboard/contact" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <ContactUsInternal />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
             <Route path="/help" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <Help />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
             } />
-            <Route path="/users" element={
-              <ProtectedRoute>
+            <Route path="/plans" element={
+              <ProtectedRouteComponent>
                 <Layout>
-                  <Users />
+                  <Plans />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/plans/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddPlan />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/plans/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditPlan />
+                </Layout>
+              </ProtectedRouteComponent>
             } />
             <Route path="/parking-spaces" element={
-              <ProtectedRoute>
+              <ProtectedRouteComponent>
                 <Layout>
                   <ParkingSpaces />
                 </Layout>
-              </ProtectedRoute>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/parking-spaces/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddParkingSpace />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/parking-spaces/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditParkingSpace />
+                </Layout>
+              </ProtectedRouteComponent>
             } />
 
             

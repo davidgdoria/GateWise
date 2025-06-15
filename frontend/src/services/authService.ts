@@ -1,6 +1,8 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = `${API_BASE_URL}/api/v1`; // Uses docker-compose/env variable
 
 // Create axios instance with default config
 const api = axios.create({
@@ -13,7 +15,7 @@ const api = axios.create({
 // Add a request interceptor to add the auth token to requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,25 +37,13 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        
-        if (!refreshToken) {
-          // No refresh token, redirect to login
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-          return Promise.reject(error);
-        }
-        
         // Try to refresh the token
-        const response = await axios.post(`${API_URL}/refresh-token`, {
-          refresh_token: refreshToken
-        });
+        const response = await axios.post(`${API_URL}/refresh-token`);
         
-        const { access_token, refresh_token } = response.data;
+        const { access_token } = response.data;
         
-        // Update tokens in localStorage
-        localStorage.setItem('token', access_token);
-        localStorage.setItem('refresh_token', refresh_token);
+        // Update token in cookie
+        Cookies.set('access_token', access_token);
         
         // Update the authorization header
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
@@ -61,9 +51,9 @@ api.interceptors.response.use(
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh token fails, clear tokens and redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
+        // If refresh token fails, clear token and redirect to login
+        Cookies.remove('access_token');
+        Cookies.remove('user_type');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
@@ -81,15 +71,15 @@ const authService = {
     formData.append('username', username);
     formData.append('password', password);
     
-    const response = await api.post('/login/access-token', formData, {
+    const response = await api.post('/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
     
     if (response.data.access_token) {
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('refresh_token', response.data.refresh_token);
+      Cookies.set('access_token', response.data.access_token);
+      Cookies.set('user_type', response.data.user_type);
     }
     
     return response.data;
@@ -97,8 +87,8 @@ const authService = {
   
   // Logout user
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
+    Cookies.remove('access_token', { path: '/' });
+    Cookies.remove('user_type', { path: '/' });
   },
   
   // Get current user
@@ -113,7 +103,7 @@ const authService = {
   
   // Check if user is authenticated
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    return !!Cookies.get('access_token');
   },
   
   // Request password reset
