@@ -33,7 +33,7 @@ async def create_payment(
             Payment.subscription_id == payment.subscription_id
         )
     )
-    if existing_payment.scalar_one_or_none():
+    if existing_payment.scalars().first():
         raise HTTPException(status_code=400, detail="Payment for this subscription already exists")
     now = datetime.utcnow()
     # Cria o pagamento
