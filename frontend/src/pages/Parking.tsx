@@ -11,12 +11,21 @@ import {
   Paper,
   CircularProgress,
   Chip,
-  Button
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import Layout from '../components/Layout';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from 'react-router-dom';
+import Pagination from '@mui/material/Pagination';
 
 interface ParkingSpace {
   id: number;
@@ -26,10 +35,28 @@ interface ParkingSpace {
   is_occupied: boolean;
 }
 
+interface ParkingSpaceResponse {
+  items: ParkingSpace[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
 const ParkingSpaces: React.FC = () => {
-  const [spaces, setSpaces] = useState<ParkingSpace[]>([]);
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<ParkingSpaceResponse>({
+    items: [],
+    total: 0,
+    page: 1,
+    size: 10,
+    pages: 0
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [spaceToDelete, setSpaceToDelete] = useState<ParkingSpace | null>(null);
 
   useEffect(() => {
     const fetchSpaces = async () => {
@@ -42,9 +69,10 @@ const ParkingSpaces: React.FC = () => {
           return;
         }
         const res = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}` },
+          params: { page, size: 10 }
         });
-        setSpaces(res.data.items || res.data); // handle both array and paginated
+        setData(res.data);
       } catch (err) {
         setError('Failed to fetch parking spaces.');
       } finally {
@@ -52,14 +80,66 @@ const ParkingSpaces: React.FC = () => {
       }
     };
     fetchSpaces();
-  }, []);
+  }, [page]);
+
+  const handleDeleteClick = (space: ParkingSpace) => {
+    setSpaceToDelete(space);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!spaceToDelete) return;
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+      await axios.delete(`${API_BASE_URL}/api/v1/parking-spaces/${spaceToDelete.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setData({
+        ...data,
+        items: data.items.filter(s => s.id !== spaceToDelete.id),
+        total: data.total - 1
+      });
+      setDeleteDialogOpen(false);
+      setSpaceToDelete(null);
+    } catch (err) {
+      setDeleteDialogOpen(false);
+      setSpaceToDelete(null);
+      setError('Failed to delete parking space.');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSpaceToDelete(null);
+  };
 
   return (
     <Layout>
       <Box sx={{ maxWidth: '100%', ml: 0, mt: 0, pl: 0 }}>
-        <Typography variant="h5" fontWeight={600} mb={3}>
-          Parking Spaces
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h5" fontWeight={600}>
+            Parking Spaces
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{
+              background: '#222',
+              color: '#fff',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { background: '#444' },
+            }}
+            onClick={() => navigate('/parking-spaces/add')}
+          >
+            Add Parking Space
+          </Button>
+        </Box>
         <Box
           sx={{
             background: '#fff',
@@ -85,10 +165,11 @@ const ParkingSpaces: React.FC = () => {
                     <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Allocated</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Occupied</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {spaces.map((space: ParkingSpace) => (
+                  {data.items.map((space: ParkingSpace) => (
                     <TableRow key={space.id}>
                       <TableCell>{space.id}</TableCell>
                       <TableCell>{space.name}</TableCell>
@@ -109,14 +190,54 @@ const ParkingSpaces: React.FC = () => {
                           size="small"
                         />
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          onClick={() => navigate(`/parking-spaces/edit/${space.id}`, { state: { space } })}
+                          sx={{ minWidth: 0, color: '#222', mr: 1 }}
+                        >
+                          <EditIcon />
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => handleDeleteClick(space)}
+                          sx={{ minWidth: 0, color: 'error.main' }}
+                        >
+                          <DeleteIcon />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
           )}
+          <Box display="flex" justifyContent="center" mt={3}>
+            <Pagination
+              count={data.pages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              shape="rounded"
+              sx={{
+                '& .Mui-selected': {
+                  background: '#222',
+                  color: '#fff',
+                },
+              }}
+            />
+          </Box>
         </Box>
       </Box>
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Parking Space</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete the parking space "{spaceToDelete?.name}"?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="secondary">Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 };

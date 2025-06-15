@@ -28,6 +28,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AddUser from './pages/AddUser';
 import AddPlan from './pages/AddPlan';
 import EditPlan from './pages/EditPlan';
+import ParkingSpaces from './pages/Parking';
+import AddParkingSpace from './pages/AddParkingSpace';
+import EditParkingSpace from './pages/EditParkingSpace';
 
 const queryClient = new QueryClient();
 
@@ -199,6 +202,27 @@ function App() {
               <ProtectedRouteComponent>
                 <Layout>
                   <EditPlan />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/parking-spaces" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <ParkingSpaces />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/parking-spaces/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddParkingSpace />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/parking-spaces/edit/:id" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <EditParkingSpace />
                 </Layout>
               </ProtectedRouteComponent>
             } />

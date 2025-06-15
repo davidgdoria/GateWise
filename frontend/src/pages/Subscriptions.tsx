@@ -137,7 +137,7 @@ const Subscriptions: React.FC = () => {
         window.location.href = '/login';
         return;
       }
-      await axios.post(`${API_BASE_URL}/api/v1/subscriptions/${subscriptionToDelete.id}/cancel`, {}, {
+      await axios.patch(`${API_BASE_URL}/api/v1/subscriptions/${subscriptionToDelete.id}/cancel`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
