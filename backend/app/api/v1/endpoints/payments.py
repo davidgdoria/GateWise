@@ -6,6 +6,7 @@ from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.db.session import get_db
 from datetime import datetime
+from fastapi_pagination import Page, paginate
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ async def create_payment(
         raise HTTPException(status_code=400, detail="Subscription is not active")
     # Valida se amount é igual ao preço da subscrição
     if payment.amount != subscription.price_at_subscription:
-        raise HTTPException(status_code=400, detail="Payment amount must match subscription price.")
+        raise HTTPException(status_code=400, detail=f"Payment amount must match subscription price: {subscription.price_at_subscription}")
     # Cria o pagamento
     p = Payment(
         subscription_id=payment.subscription_id,
@@ -36,11 +37,11 @@ async def create_payment(
     await db.refresh(p)
     return p
 
-@router.get("/", response_model=list[PaymentOut])
+@router.get("/", response_model=Page[PaymentOut])
 async def list_payments(subscription_id: int = None, db: AsyncSession = Depends(get_db)):
     query = select(Payment)
     if subscription_id is not None:
         query = query.where(Payment.subscription_id == subscription_id)
     result = await db.execute(query.order_by(Payment.paid_at.desc()))
     payments = result.scalars().all()
-    return payments
+    return paginate(payments)
