@@ -57,6 +57,19 @@ class ParkingSpaceAllocation(BaseModel):
 class SubscriptionParkingSpacesOut(BaseModel):
     parking_spaces: list['ParkingSpaceOut']
 
+class PaymentCreate(BaseModel):
+    subscription_id: int
+    amount: float
+
+class PaymentOut(BaseModel):
+    id: int
+    subscription_id: int
+    amount: float
+    paid_at: datetime
+    status: str
+    class Config:
+        from_attributes = True
+
 class AccessLogOut(BaseModel):
     id: int
     license_plate: str

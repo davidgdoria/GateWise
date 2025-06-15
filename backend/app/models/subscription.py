@@ -18,6 +18,7 @@ class Subscription(Base):
 
     plan = relationship("Plan")
     user = relationship("User")
+    payments = relationship("Payment", back_populates="subscription")
 
 # Corrige relacionamento circular
 from app.models.subscription_parking_space import SubscriptionParkingSpace

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.subscription import Subscription
 from app.models.schemas import SubscriptionCreate, SubscriptionOut
+from app.models.payment import Payment
 from app.api.v1.endpoints.users import admin_required
 from app.db.session import get_db
 from typing import List
@@ -15,6 +16,7 @@ from app.models.parking_space import ParkingSpace
 from app.models.subscription_parking_space import SubscriptionParkingSpace
 from app.models.vehicle import Vehicle
 from app.models.schemas import ParkingSpaceAllocation, SubscriptionParkingSpacesOut, ParkingSpaceOut, VehicleOut, BaseModel
+from sqlalchemy.future import select
 
 from fastapi import Body
 
