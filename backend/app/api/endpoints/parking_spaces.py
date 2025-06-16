@@ -1,6 +1,7 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.api import deps
 from app.models.models import ParkingSpace
@@ -8,17 +9,34 @@ from app.schemas.parking_space import ParkingSpaceCreate, ParkingSpaceUpdate, Pa
 
 router = APIRouter()
 
-@router.get("/", response_model=List[ParkingSpaceResponse])
+@router.get("/", response_model=dict)
 async def read_parking_spaces(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=1000),
 ) -> Any:
     """
-    Retrieve parking spaces.
+    Retrieve parking spaces with pagination.
     """
-    parking_spaces = db.query(ParkingSpace).offset(skip).limit(limit).all()
-    return parking_spaces
+    # Get total count
+    total = db.query(func.count(ParkingSpace.id)).scalar()
+    
+    # Calculate offset
+    offset = (page - 1) * size
+    
+    # Get paginated results
+    parking_spaces = db.query(ParkingSpace).offset(offset).limit(size).all()
+    
+    # Calculate total pages
+    total_pages = (total + size - 1) // size
+    
+    return {
+        "items": parking_spaces,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": total_pages
+    }
 
 @router.post("/", response_model=ParkingSpaceResponse)
 async def create_parking_space(

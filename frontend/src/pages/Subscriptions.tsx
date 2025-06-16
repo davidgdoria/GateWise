@@ -26,11 +26,13 @@ import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
+import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
+import AssignParkingSpaces from './AssignParkingSpaces';
 
 interface Subscription {
   id: number;
@@ -239,13 +241,26 @@ const Subscriptions: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {sub.status === 'active' && (
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleCancelClick(sub)} 
-                            sx={{ color: 'warning.main' }}
-                          >
-                            <CancelIcon />
-                          </IconButton>
+                          <>
+                            <IconButton 
+                              size="small" 
+                              sx={{ color: 'primary.main', mr: 1 }}
+                              onClick={() => {
+                                const userObj = users.find(u => u.id === sub.user_id);
+                                const planObj = plans.find(p => p.id === sub.plan_id);
+                                navigate('/assign-parking', { state: { subscription: sub, user: userObj, plan: planObj } });
+                              }}
+                            >
+                              <LocalParkingIcon />
+                            </IconButton>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleCancelClick(sub)} 
+                              sx={{ color: 'warning.main' }}
+                            >
+                              <CancelIcon />
+                            </IconButton>
+                          </>
                         )}
                       </TableCell>
                     </TableRow>

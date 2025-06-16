@@ -130,6 +130,7 @@ const EditParkingSpace: React.FC = () => {
                   onChange={handleChange}
                   name="is_allocated"
                   color="primary"
+                  disabled
                 />
               }
               label="Allocated"
@@ -142,6 +143,7 @@ const EditParkingSpace: React.FC = () => {
                   onChange={handleChange}
                   name="is_occupied"
                   color="primary"
+                  disabled
                 />
               }
               label="Occupied"

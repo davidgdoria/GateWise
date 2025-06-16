@@ -31,6 +31,7 @@ import EditPlan from './pages/EditPlan';
 import ParkingSpaces from './pages/Parking';
 import AddParkingSpace from './pages/AddParkingSpace';
 import EditParkingSpace from './pages/EditParkingSpace';
+import AssignParkingSpaces from './pages/AssignParkingSpaces';
 
 const queryClient = new QueryClient();
 
@@ -223,6 +224,13 @@ function App() {
               <ProtectedRouteComponent>
                 <Layout>
                   <EditParkingSpace />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/assign-parking" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AssignParkingSpaces />
                 </Layout>
               </ProtectedRouteComponent>
             } />
