@@ -31,5 +31,5 @@ async def read_users_me(username: str = Depends(verify_token), db: AsyncSession 
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
     if user:
-        return {"username": user.username, "type": user.type.value}
-    return {"username": username, "type": None}
+        return {"username": user.username, "type": user.type.value, "full_name": user.full_name}
+    return {"username": username, "type": None, "full_name": None}
