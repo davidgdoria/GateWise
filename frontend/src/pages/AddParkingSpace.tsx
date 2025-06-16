@@ -34,7 +34,7 @@ const AddParkingSpace: React.FC = () => {
         navigate('/login');
         return;
       }
-      await axios.post(`${API_BASE_URL}/api/v1/parking-spaces`, form, {
+      await axios.post(`${API_BASE_URL}/parking-spaces`, form, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

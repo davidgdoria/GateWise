@@ -68,7 +68,7 @@ const ParkingSpaces: React.FC = () => {
           window.location.href = '/login';
           return;
         }
-        const res = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
+        const res = await axios.get(`${API_BASE_URL}/parking-spaces`, {
           headers: { 'Authorization': `Bearer ${token}` },
           params: { page, size: 10 }
         });
@@ -95,7 +95,7 @@ const ParkingSpaces: React.FC = () => {
         window.location.href = '/login';
         return;
       }
-      await axios.delete(`${API_BASE_URL}/api/v1/parking-spaces/${spaceToDelete.id}`, {
+      await axios.delete(`${API_BASE_URL}/parking-spaces/${spaceToDelete.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setData({

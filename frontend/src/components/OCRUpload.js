@@ -32,7 +32,7 @@ const OCRUpload = () => {
       formData.append('file', selectedFile);
 
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/ocr/recognize', {
+      const response = await fetch('${API_BASE_URL}/ocr/recognize', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

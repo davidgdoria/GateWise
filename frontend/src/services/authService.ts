@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
 
-const API_URL = `${API_BASE_URL}/api/v1`; // Uses docker-compose/env variable
+const API_URL = `${API_BASE_URL}`; // Uses docker-compose/env variable
 
 // Create axios instance with default config
 const api = axios.create({

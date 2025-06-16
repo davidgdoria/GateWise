@@ -39,7 +39,7 @@ const AssignParkingSpaces: React.FC = () => {
         }
 
         // First, get the total count
-        const countRes = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
+        const countRes = await axios.get(`${API_BASE_URL}/parking-spaces`, {
           headers: { 'Authorization': `Bearer ${token}` },
           params: { page: 1, size: 1 } // Just get the first item to get total count
         });
@@ -47,7 +47,7 @@ const AssignParkingSpaces: React.FC = () => {
         const total = countRes.data.total;
 
         // Then fetch all spaces in one call
-        const res = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
+        const res = await axios.get(`${API_BASE_URL}/parking-spaces`, {
           headers: { 'Authorization': `Bearer ${token}` },
           params: { page: 1, size: total } // Get all spaces
         });

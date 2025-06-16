@@ -51,10 +51,10 @@ const AddSubscription: React.FC = () => {
         const token = Cookies.get('access_token');
         if (!token) return;
         const [usersRes, plansRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/v1/users/`, {
+          axios.get(`${API_BASE_URL}/users/`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          axios.get(`${API_BASE_URL}/api/v1/plans/`, {
+          axios.get(`${API_BASE_URL}/plans/`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
@@ -100,7 +100,7 @@ const AddSubscription: React.FC = () => {
         setError('You are not authenticated. Please log in again.');
         return;
       }
-      await axios.post(`${API_BASE_URL}/api/v1/subscriptions/`, {
+      await axios.post(`${API_BASE_URL}/subscriptions/`, {
         user_id: parseInt(form.user_id, 10),
         plan_id: parseInt(form.plan_id, 10),
         status: form.status,
