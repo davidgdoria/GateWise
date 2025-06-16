@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Grid,
@@ -31,6 +31,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
 import { useParking } from '../hooks/useParking';
+import authService from '../services/authService';
 
 ChartJS.register(
   CategoryScale,
@@ -81,6 +82,7 @@ const chartOptions = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [userFullName, setUserFullName] = useState<string>('');
   // Mock data for overview, dailyStats, spaces
   const overview = {
     total_entries: 42,
@@ -104,10 +106,21 @@ export default function Dashboard() {
   } = useVehicles();
   const { spaces, total: totalSpaces, loading: parkingLoading, error: parkingError, fetchParkingSpaces } = useParking();
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await authService.getCurrentUser();
+        if (userData) {
+          setUserFullName(userData.full_name || userData.username);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
     fetchVehicles();
     fetchParkingSpaces();
-    // All other data is mock
   }, [fetchVehicles, fetchParkingSpaces]);
 
   const loading = vehiclesLoading;
@@ -145,11 +158,11 @@ export default function Dashboard() {
       {/* Top bar */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} mt={1}>
         <Typography variant="h5" fontWeight={600}>
-          Welcome back, Matthew
+          Welcome back, {userFullName ? userFullName.split(' ')[0] : 'User'}
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
           <Avatar src="https://randomuser.me/api/portraits/men/32.jpg" sx={{ width: 36, height: 36 }} />
-          <Typography fontWeight={500}>Matthew Parker</Typography>
+          <Typography fontWeight={500}>{userFullName || 'Loading...'}</Typography>
         </Box>
       </Box>
       {/* Cards */}
