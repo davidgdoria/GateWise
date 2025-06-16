@@ -8,7 +8,7 @@ import requests
 
 # === Configurações ===
 model = YOLO("models/license_plate.pt")  # Modelo YOLO treinado para matrículas
-API_URL = "http://localhost:8000/api/v1/access_check"  # Endpoint da API
+API_URL = "http://gatewise.ddns.net:8000/api/v1/access_check"  # Endpoint da API
 CONF_THRESH = 0.3  # Confiança mínima para deteção
 SHOW_DEBUG = True  # Mostrar janelas com imagem
 
