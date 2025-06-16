@@ -151,8 +151,11 @@ async def allocate_parking_spaces(subscription_id: int, allocation: ParkingSpace
         if space.is_allocated:
             raise HTTPException(status_code=400, detail=f"Parking space {space.id} is already allocated.")
     # Associa
-    for space in parking_spaces:
-        assoc = SubscriptionParkingSpace(subscription_id=subscription_id, parking_space_id=space.id)
+    # Store the order of allocation based on input list
+    id_to_space = {space.id: space for space in parking_spaces}
+    for idx, parking_space_id in enumerate(allocation.parking_space_ids):
+        space = id_to_space[parking_space_id]
+        assoc = SubscriptionParkingSpace(subscription_id=subscription_id, parking_space_id=space.id, order=idx)
         db.add(assoc)
         space.is_allocated = True
         db.add(space)

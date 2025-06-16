@@ -161,7 +161,7 @@ async def seed_subscriptions_and_allocations():
                         allocated = free_spaces
                     for ps in allocated:
                         ps.is_allocated = True
-                        session.add(SubscriptionParkingSpace(subscription_id=sub.id, parking_space_id=ps.id))
+                        session.add(SubscriptionParkingSpace(subscription_id=sub.id, parking_space_id=ps.id, order=0))
             else:
                 plan = random.choice(plans)
                 start_date = datetime.now() - timedelta(days=random.randint(30, 180))
@@ -188,7 +188,7 @@ async def seed_subscriptions_and_allocations():
                         allocated = free_spaces  # aloca o que sobrou
                     for ps in allocated:
                         ps.is_allocated = True
-                        session.add(SubscriptionParkingSpace(subscription_id=sub.id, parking_space_id=ps.id))
+                        session.add(SubscriptionParkingSpace(subscription_id=sub.id, parking_space_id=ps.id, order=0))
         await session.commit()
     print("Subscrições e alocações inseridas.")
 
