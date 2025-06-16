@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
-// Layout import removed as it's no longer used.
+import Layout from '../components/Layout';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { apiClient } from '../services/api';
@@ -136,57 +136,66 @@ const EditVehicle: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography>Loading...</Typography>
-      </Box>
-    );
+      <Layout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <Typography>Loading...</Typography>
+        </Box>
+      </Layout>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8 }}>
-      <Paper sx={{ p: 4, borderRadius: 4 }}>
-        <Typography variant="h4" fontWeight={700} mb={3}>
-          Edit Vehicle
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="License Plate"
-            name="license_plate"
-            value={formData.license_plate}
-            onChange={handleTextChange}
-            fullWidth
-            margin="normal"
-            required
-            error={!!error && !formData.license_plate.trim()}
-            helperText={!formData.license_plate.trim() && error ? error : ''}
-          />
-          <TextField
-            label="Make"
-            name="make"
-            value={formData.make}
-            onChange={handleTextChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Model"
-            name="model"
-            value={formData.model}
-            onChange={handleTextChange}
-            fullWidth
-            margin="normal"
-          />
-          {showCustomColor ? (
+    <Layout>
+      <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+        <Paper sx={{ p: 4, borderRadius: 4 }}>
+          <Typography variant="h5" fontWeight={600} mb={3}>
+            Edit Vehicle
+          </Typography>
+          <form onSubmit={handleSubmit}>
             <TextField
-              label="Custom Color"
-              name="color"
-              value={formData.color}
+              label="License Plate"
+              name="license_plate"
+              value={formData.license_plate}
+              onChange={handleTextChange}
+              fullWidth
+              margin="normal"
+              required
+              error={!!error && !formData.license_plate.trim()}
+              helperText={!formData.license_plate.trim() && error ? error : ''}
+            />
+            <TextField
+              label="Make"
+              name="make"
+              value={formData.make}
               onChange={handleTextChange}
               fullWidth
               margin="normal"
             />
-          ) : (
+            <TextField
+              label="Model"
+              name="model"
+              value={formData.model}
+              onChange={handleTextChange}
+              fullWidth
+              margin="normal"
+            />
+            {showCustomColor ? (
+              <TextField
+                label="Custom Color"
+                name="color"
+                value={formData.color}
+                onChange={handleTextChange}
+                fullWidth
+                margin="normal"
+              />
+            ) : (
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Color</InputLabel>
+                <Select
+                  name="color"
+                  value={formData.color}
+                  label="Color"
+                  onChange={handleSelectChange}
                 >
                   {commonColors.map(color => (
                     <MenuItem key={color} value={color}>

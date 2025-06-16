@@ -42,17 +42,17 @@ class ParkingService {
     const params = new URLSearchParams();
     params.append('page', page.toString());
     params.append('size', size.toString());
-    return apiClient.get<{ items: any[]; total: number; page: number; size: number; pages: number }>(`/api/v1/parking-spaces/?${params.toString()}`, {
+    return apiClient.get<{ items: any[]; total: number; page: number; size: number; pages: number }>(`/parking-spaces/?${params.toString()}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
 
   async getParkingSpace(id: number): Promise<ParkingSpace> {
-    return apiClient.get<ParkingSpace>(`/api/v1/parking/spaces/${id}/`);
+    return apiClient.get<ParkingSpace>(`/parking/spaces/${id}/`);
   }
 
   async updateParkingSpace(id: number, data: ParkingSpaceUpdate): Promise<ParkingSpace> {
-    return apiClient.put<ParkingSpace>(`/api/v1/parking/spaces/${id}`, data);
+    return apiClient.put<ParkingSpace>(`/parking/spaces/${id}`, data);
   }
 
   async getParkingRecords(
@@ -70,15 +70,15 @@ class ParkingService {
     if (endDate) {
       params.append('end_date', endDate.toISOString());
     }
-    return apiClient.get<ParkingRecord[]>(`/api/v1/parking/records/?${params.toString()}`);
+    return apiClient.get<ParkingRecord[]>(`/parking/records/?${params.toString()}`);
   }
 
   async getParkingRecord(id: number): Promise<ParkingRecord> {
-    return apiClient.get<ParkingRecord>(`/api/v1/parking/records/${id}/`);
+    return apiClient.get<ParkingRecord>(`/parking/records/${id}/`);
   }
 
   async createParkingRecord(data: ParkingRecordCreate): Promise<ParkingRecord> {
-    return apiClient.post<ParkingRecord>('/api/v1/parking/records', data);
+    return apiClient.post<ParkingRecord>('/parking/records', data);
   }
 
   async recordVehicleExit(recordId: number): Promise<ParkingRecord> {

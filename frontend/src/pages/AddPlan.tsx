@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper, Checkbox, FormControlLabel } from '@mui/material';
-// Layout import removed as it's no longer used.
+import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -59,86 +59,48 @@ const AddPlan: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8 }}>
-      <Paper sx={{ p: 4, borderRadius: 4 }}>
-        <Typography variant="h4" fontWeight={700} mb={3}>
-          Add Plan
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Price"
-            name="price"
-            value={form.price}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            type="number"
-            inputProps={{ min: 0 }}
-          />
-          <TextField
-            label="Num Spaces"
-            name="num_spaces"
-            value={form.num_spaces}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            type="number"
-            inputProps={{ min: 1 }}
-          />
-          <TextField
-            label="Description"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Duration (days)"
-            name="duration_days"
-            value={form.duration_days}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            type="number"
-            inputProps={{ min: 1 }}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={form.active}
-                onChange={handleChange}
-                name="active"
-                color="primary"
-              />
-            }
-            label="Active"
-            sx={{ mt: 2 }}
-          />
-          {error && <Typography color="error" mb={2}>{error}</Typography>}
-          <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
-            <Button variant="outlined" color="secondary" onClick={() => navigate('/plans')}>Cancel</Button>
-            <Button variant="contained" type="submit" sx={{ background: '#222', color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, '&:hover': { background: '#444' } }}>
-              Add Plan
-            </Button>
-          </Box>
-        </form>
-      </Paper>
-    </Box>
-
+    <Layout>
+      <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
+        <Paper sx={{ p: 4, borderRadius: 4 }}>
+          <Typography variant="h5" fontWeight={600} mb={3}>
+            Add Plan
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Name"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Price"
+              name="price"
+              value={form.price}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              type="number"
+              inputProps={{ min: 0 }}
+            />
+            <TextField
+              label="Num Spaces"
+              name="num_spaces"
+              value={form.num_spaces}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              type="number"
+              inputProps={{ min: 1 }}
+            />
+            <TextField
+              label="Description"
+              name="description"
+              value={form.description}
               onChange={handleChange}
               fullWidth
               margin="normal"

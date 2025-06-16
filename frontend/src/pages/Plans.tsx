@@ -182,12 +182,14 @@ const Plans: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <IconButton size="small" onClick={() => handleEdit(plan.id)} sx={{ color: '#222' }}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton size="small" onClick={() => handleDeleteClick(plan)} sx={{ color: 'error.main' }}>
-                          <DeleteIcon />
-                        </IconButton>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <IconButton size="small" onClick={() => handleEdit(plan.id)} sx={{ color: '#222' }}>
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton size="small" onClick={() => handleDeleteClick(plan)} sx={{ color: 'error.main' }}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

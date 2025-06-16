@@ -153,7 +153,7 @@ class ApiClient {
 
   // User methods
   async getUsers(page: number, size: number): Promise<UserResponse> {
-    const response = await this.client.get<UserResponse>('/api/v1/users', {
+    const response = await this.client.get<UserResponse>('/users', {
       params: { page, size }
     });
     return response.data;
@@ -165,7 +165,7 @@ class ApiClient {
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
-    const response = await this.client.post<User>('/api/v1/users', user);
+    const response = await this.client.post<User>('/users', user);
     return response.data;
   }
 
@@ -175,11 +175,11 @@ class ApiClient {
   }
 
   async deleteUser(id: number): Promise<void> {
-    await this.client.delete(`/api/v1/users/${id}`);
+    await this.client.delete(`/users/${id}`);
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await this.client.get<User>('/api/v1/users/me');
+    const response = await this.client.get<User>('/users/me');
     return response.data;
   }
 }

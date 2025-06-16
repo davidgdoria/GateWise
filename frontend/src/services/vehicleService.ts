@@ -41,24 +41,24 @@ class VehicleService {
     if (plateText) {
       params.append('plate_text', plateText);
     }
-    return apiClient.get<{ items: Vehicle[], total: number }>(`/api/v1/vehicles/?${params.toString()}`, {
+    return apiClient.get<{ items: Vehicle[], total: number }>(`/vehicles/?${params.toString()}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
 
   async getVehicle(id: number): Promise<Vehicle> {
-    return apiClient.get<Vehicle>(`/api/v1/vehicles/${id}/`);
+    return apiClient.get<Vehicle>(`/vehicles/${id}/`);
   }
 
   async getVehicleHistory(id: number, skip = 0, limit = 100): Promise<ParkingRecord[]> {
     const params = new URLSearchParams();
     params.append('skip', skip.toString());
     params.append('limit', limit.toString());
-    return apiClient.get<ParkingRecord[]>(`/api/v1/vehicles/${id}/history/?${params.toString()}`);
+    return apiClient.get<ParkingRecord[]>(`/vehicles/${id}/history/?${params.toString()}`);
   }
 
   async createVehicle(data: VehicleCreate): Promise<Vehicle> {
-    return apiClient.post<Vehicle>('/api/v1/vehicles', data);
+    return apiClient.post<Vehicle>('/vehicles', data);
   }
 
   async updateVehicle(id: number, data: VehicleUpdate): Promise<Vehicle> {
