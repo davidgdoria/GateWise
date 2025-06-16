@@ -119,6 +119,25 @@ const authService = {
       new_password: newPassword
     });
     return response.data;
+  },
+
+  getUserFullName: async () => {
+    const token = Cookies.get('access_token');
+    if (!token) {
+      throw new Error('No access token found');
+    }
+
+    try {
+      const response = await api.get('/users/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data.full_name;
+    } catch (error) {
+      console.error('Error fetching user full name:', error);
+      throw error;
+    }
   }
 };
 

@@ -6,7 +6,9 @@ import {
   Security as SecurityIcon, 
   Speed as SpeedIcon,
   Notifications as NotificationsIcon,
-  Login as LoginIcon
+  Login as LoginIcon,
+  ContactMail as ContactIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -46,88 +48,107 @@ const Landing = () => {
       backgroundAttachment: 'fixed',
       py: 4
     }}>
-      {/* Hero Section */}
-      <Container maxWidth="lg" sx={{ mb: 6 }}>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={6}>
-            {/* Logo Space */}
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
-              <Box
-                component="img"
-                src="/images/logo.png"
-                alt="GateWise Logo"
-                sx={{
-                  height: 60,
-                  width: 'auto',
-                  mr: 2
-                }}
-              />
-              <Typography variant="h2" component="h1" sx={{ 
-                fontWeight: 'bold',
-                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
-              }}>
-                GateWise
-              </Typography>
-            </Box>
-            <Typography variant="h5" color="white" paragraph sx={{ 
-              textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-              mb: 4
+      {/* Top Navigation */}
+      <Container maxWidth="lg">
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 4
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box
+              component="img"
+              src="/images/logo.png"
+              alt="GateWise Logo"
+              sx={{
+                height: 60,
+                width: 'auto',
+                mr: 2
+              }}
+            />
+            <Typography variant="h2" component="h1" sx={{ 
+              fontWeight: 'bold',
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
             }}>
-              Advanced access control and parking management system powered by AI.
+              GateWise
             </Typography>
-            <Box sx={{ mt: 4 }}>
-              <Button 
-                variant="outlined" 
-                size="large"
-                onClick={() => navigate('/contact')}
-                sx={{ 
-                  py: 1.5,
-                  px: 4,
-                  fontSize: '1.1rem',
-                  borderRadius: 2,
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<LoginIcon />}
+              onClick={() => navigate('/login')}
+              sx={{
+                py: 1,
+                px: 3,
+                fontSize: '1rem',
+                borderRadius: 2,
+                bgcolor: '#1976d2',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: '#1565c0'
+                }
+              }}
+            >
+              Login
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<ContactIcon />}
+              onClick={() => navigate('/contact')}
+              sx={{
+                py: 1,
+                px: 3,
+                fontSize: '1rem',
+                borderRadius: 2,
+                borderColor: 'white',
+                color: 'white',
+                '&:hover': {
                   borderColor: 'white',
-                  color: 'white',
-                  '&:hover': {
-                    borderColor: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  }
-                }}
-              >
-                Contact Us
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => navigate('/about')}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  fontSize: '1.1rem',
-                  borderRadius: 2,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                }
+              }}
+            >
+              Get in Touch
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<InfoIcon />}
+              onClick={() => navigate('/about')}
+              sx={{
+                py: 1,
+                px: 3,
+                fontSize: '1rem',
+                borderRadius: 2,
+                borderColor: 'white',
+                color: 'white',
+                '&:hover': {
                   borderColor: 'white',
-                  color: 'white',
-                  mt: 2,
-                  ml: 0,
-                  display: 'block',
-                  '&:hover': {
-                    borderColor: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  }
-                }}
-              >
-                About Us
-              </Button>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={6}>
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                }
+              }}
+            >
+              Learn More
+            </Button>
+          </Box>
+        </Box>
+      </Container>
+
+      {/* Hero Section */}
+      <Container maxWidth="lg" sx={{ mb: 4 }}>
+        <Grid container spacing={2} alignItems="center" justifyContent="center">
+          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
             <Card elevation={6} sx={{ 
               borderRadius: 2, 
               overflow: 'hidden',
               backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              maxWidth: '500px',
+              width: '100%'
             }}>
               <Box
                 component="img"
@@ -135,13 +156,15 @@ const Landing = () => {
                 alt="Smart Parking"
                 sx={{
                   width: '100%',
-                  height: 'auto',
+                  height: '250px',
+                  objectFit: 'cover',
                   display: 'block'
                 }}
               />
               <CardContent sx={{ 
                 background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                color: 'white'
+                color: 'white',
+                py: 1
               }}>
                 <Typography variant="h6" align="center">
                   Secure • Efficient • Intelligent
@@ -153,27 +176,28 @@ const Landing = () => {
       </Container>
 
       {/* Features Section */}
-      <Container maxWidth="lg" sx={{ mb: 6 }}>
+      <Container maxWidth="lg" sx={{ mb: 4 }}>
         <Typography variant="h3" component="h2" align="center" gutterBottom sx={{ 
           fontWeight: 'bold',
           color: 'white',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+          textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+          mb: 2
         }}>
           Key Features
         </Typography>
         <Typography variant="h6" color="white" align="center" paragraph sx={{ 
-          mb: 6,
+          mb: 3,
           textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
         }}>
           Discover how GateWise can transform your parking management
         </Typography>
-        <Grid container spacing={4}>
+        <Grid container spacing={2}>
           {features.map((feature, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Paper 
                 elevation={3} 
                 sx={{ 
-                  p: 3, 
+                  p: 2, 
                   height: '100%', 
                   display: 'flex', 
                   flexDirection: 'column',
@@ -189,7 +213,7 @@ const Landing = () => {
                   }
                 }}
               >
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ mb: 1 }}>
                   {feature.icon}
                 </Box>
                 <Typography variant="h6" component="h3" gutterBottom>
@@ -202,47 +226,6 @@ const Landing = () => {
             </Grid>
           ))}
         </Grid>
-      </Container>
-
-      {/* Login CTA Section */}
-      <Container maxWidth="md">
-        <Paper 
-          elevation={4} 
-          sx={{ 
-            p: 4, 
-            borderRadius: 2,
-            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%)',
-            color: 'white',
-            textAlign: 'center',
-            backdropFilter: 'blur(10px)'
-          }}
-        >
-          <Typography variant="h4" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Ready to get started?
-          </Typography>
-          <Typography variant="body1" paragraph sx={{ mb: 3 }}>
-            Access your GateWise dashboard to manage your parking operations efficiently.
-          </Typography>
-          <Button 
-            variant="contained" 
-            size="large" 
-            startIcon={<LoginIcon />}
-            onClick={() => navigate('/login')}
-            sx={{ 
-              py: 1.5,
-              px: 4,
-              fontSize: '1.1rem',
-              borderRadius: 2,
-              bgcolor: 'white',
-              color: 'primary.main',
-              '&:hover': {
-                bgcolor: 'grey.100'
-              }
-            }}
-          >
-            Login Now
-          </Button>
-        </Paper>
       </Container>
     </Box>
   );

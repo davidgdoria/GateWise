@@ -158,7 +158,7 @@ export default function Dashboard() {
       {/* Top bar */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} mt={1}>
         <Typography variant="h5" fontWeight={600}>
-          Welcome back, {userFullName ? userFullName.split(' ')[0] : 'User'}
+          Dashboard
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
           <Avatar src="https://randomuser.me/api/portraits/men/32.jpg" sx={{ width: 36, height: 36 }} />

@@ -105,11 +105,11 @@ const AddUser: React.FC = () => {
               helperText={!formData.email.trim() && error ? error : ''}
             />
             <FormControl fullWidth margin="normal">
-              <InputLabel>Type</InputLabel>
+              <InputLabel>Profile</InputLabel>
               <Select
                 name="type"
                 value={formData.type}
-                label="Type"
+                label="Profile"
                 onChange={handleSelectChange}
               >
                 {userTypes.map(type => (
