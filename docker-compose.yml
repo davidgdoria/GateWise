@@ -5,8 +5,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        REACT_APP_API_URL: http://gatewise.ddns.net:8000
     ports:
       - "3000:3000"
     environment:
