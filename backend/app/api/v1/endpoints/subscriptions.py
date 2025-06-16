@@ -178,7 +178,8 @@ async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession
     output = []
     for s in spaces:
         vehicle = VehicleOut.from_orm(s.vehicle) if s.vehicle else None
-        output.append(ParkingSpaceWithVehicleOut(**s.__dict__, vehicle=vehicle))
+        data = {k: v for k, v in s.__dict__.items() if k != 'vehicle'}
+        output.append(ParkingSpaceWithVehicleOut(**data, vehicle=vehicle))
     return paginate(output)
 
 from datetime import datetime
