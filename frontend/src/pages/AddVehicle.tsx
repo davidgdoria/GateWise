@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
 const vehicleTypes = ['Car', 'Motorcycle'];
 const commonColors = [
