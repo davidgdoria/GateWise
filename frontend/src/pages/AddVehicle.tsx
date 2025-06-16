@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
 const vehicleTypes = ['Car', 'Motorcycle'];
 const commonColors = [
@@ -78,7 +79,7 @@ const AddVehicle: React.FC = () => {
         return;
       }
 
-      await axios.post('http://localhost:8000/api/v1/vehicles', formData, {
+      await axios.post(`${API_BASE_URL}/api/v1/vehicles`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

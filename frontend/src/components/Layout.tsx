@@ -32,6 +32,7 @@ import {
   AssignmentTurnedIn as AssignmentTurnedInIcon,
 } from '@mui/icons-material';
 import authService from '../services/authService';
+import Cookies from 'js-cookie';
 
 const drawerWidth = 200;
 
@@ -42,22 +43,34 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const userType = Cookies.get('user_type');
 
   const handleLogout = () => {
     authService.logout();
     navigate('/');
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Vehicles', icon: <DirectionsCarIcon />, path: '/vehicles' },
-    { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
-    { text: 'Plans', icon: <AssignmentTurnedInIcon />, path: '/plans' },
-    { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
-    { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
-    { text: 'Users', icon: <PeopleIcon />, path: '/users' },
-    { text: 'Parking Spaces', icon: <ParkingIcon />, path: '/parking-spaces' },
-  ];
+  // Define menu items based on user type
+  const getMenuItems = () => {
+    const commonItems = [
+      { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+      { text: 'Vehicles', icon: <DirectionsCarIcon />, path: '/vehicles' },
+      { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
+      { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
+    ];
+
+    const adminItems = [
+      { text: 'Plans', icon: <AssignmentTurnedInIcon />, path: '/plans' },
+      { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
+      { text: 'Users', icon: <PeopleIcon />, path: '/users' },
+      { text: 'Parking Spaces', icon: <ParkingIcon />, path: '/parking-spaces' },
+      { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    ];
+
+    return userType === 'admin' ? [...commonItems, ...adminItems] : commonItems;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <Box sx={{ display: 'flex', background: '#f7f7f7', minHeight: '100vh', overflow: 'hidden' }}>

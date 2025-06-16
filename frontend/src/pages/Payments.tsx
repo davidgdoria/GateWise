@@ -25,16 +25,10 @@ interface Payment {
   id: number;
   subscription_id: number;
   amount: number;
+  paid_at: string;
   status: string;
-  created_at: string;
-  subscription?: {
-    user?: {
-      full_name?: string;
-    };
-    plan?: {
-      name?: string;
-    };
-  };
+  plan_name: string;
+  user_full_name: string;
 }
 
 const Payments: React.FC = () => {
@@ -134,8 +128,8 @@ const Payments: React.FC = () => {
                 {payments.map((payment) => (
                   <TableRow key={payment.id} hover>
                     <TableCell>{payment.id}</TableCell>
-                    <TableCell>{payment.subscription?.user?.full_name || 'N/A'}</TableCell>
-                    <TableCell>{payment.subscription?.plan?.name || 'N/A'}</TableCell>
+                    <TableCell>{payment.user_full_name || 'N/A'}</TableCell>
+                    <TableCell>{payment.plan_name || 'N/A'}</TableCell>
                     <TableCell>€{payment.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))}

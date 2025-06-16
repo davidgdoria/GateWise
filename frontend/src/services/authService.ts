@@ -1,11 +1,10 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import API_BASE_URL from '../config';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_BASE_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,7 +36,7 @@ api.interceptors.response.use(
       
       try {
         // Try to refresh the token
-        const response = await axios.post(`${API_URL}/refresh-token`);
+        const response = await axios.post(`${API_BASE_URL}/api/v1/refresh-token`);
         
         const { access_token } = response.data;
         
