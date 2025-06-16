@@ -70,6 +70,17 @@ class PaymentOut(BaseModel):
     class Config:
         from_attributes = True
 
+class PaymentWithDetailsOut(BaseModel):
+    id: int
+    subscription_id: int
+    amount: float
+    paid_at: datetime
+    status: str
+    plan_name: str
+    user_full_name: str
+    class Config:
+        from_attributes = True
+
 class AccessLogOut(BaseModel):
     id: int
     license_plate: str

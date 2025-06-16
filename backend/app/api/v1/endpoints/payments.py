@@ -51,7 +51,10 @@ async def create_payment(
 from app.core.security import verify_token
 from app.models.user import User
 
-@router.get("/", response_model=Page[PaymentOut])
+from app.models.schemas import PaymentWithDetailsOut
+from sqlalchemy.orm import joinedload
+
+@router.get("/", response_model=Page[PaymentWithDetailsOut])
 async def list_payments(
     subscription_id: int = None,
     username: str = Depends(verify_token),
@@ -61,7 +64,11 @@ async def list_payments(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    query = select(Payment)
+    # Join Payment -> Subscription -> Plan & User
+    query = select(Payment).options(
+        joinedload(Payment.subscription).joinedload(Subscription.plan),
+        joinedload(Payment.subscription).joinedload(Subscription.user)
+    )
     if subscription_id is not None:
         query = query.where(Payment.subscription_id == subscription_id)
     if user.type.value != "admin":
@@ -71,4 +78,16 @@ async def list_payments(
         query = query.where(Payment.subscription_id.in_(user_sub_ids))
     result = await db.execute(query.order_by(Payment.paid_at.desc()))
     payments = result.scalars().all()
-    return paginate(payments)
+    enriched = [
+        PaymentWithDetailsOut(
+            id=p.id,
+            subscription_id=p.subscription_id,
+            amount=p.amount,
+            paid_at=p.paid_at,
+            status=p.status,
+            plan_name=p.subscription.plan.name if p.subscription and p.subscription.plan else None,
+            user_full_name=p.subscription.user.full_name if p.subscription and p.subscription.user else None
+        ) for p in payments
+    ]
+    return paginate(enriched)
+
