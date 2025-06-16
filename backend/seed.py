@@ -10,6 +10,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 USERS = [
     {"username": "admin@gatewise.com", "password": "admin123", "type": UserType.admin, "full_name": "Admin User", "email": "admin@gatewise.com"},
+    {"username": "user@gatewise.com", "password": "user123", "type": UserType.user, "full_name": "Gatewise User", "email": "user@gatewise.com"},
     *[
         {"username": f"user{i}", "password": f"secret{i}", "type": UserType.user, "full_name": f"User {i}", "email": f"user{i}@gatewise.com"} for i in range(1, 11)
     ]
@@ -100,17 +101,16 @@ async def seed_plans():
 async def seed_parking_spaces():
     async with AsyncSessionLocal() as session:
         existing = (await session.execute(select(ParkingSpace))).scalars().all()
-        if len(existing) >= 40:
-            print("ParkingSpaces já existem.")
-            return
-        for i in range(1, 51):
+        existing_names = {ps.name for ps in existing}
+        new_spaces = 0
+        for i in range(1, 501):
             name = f"PS-{i:03d}"
-            exists = await session.execute(select(ParkingSpace).where(ParkingSpace.name == name))
-            if not exists.scalar_one_or_none():
+            if name not in existing_names:
                 ps = ParkingSpace(name=name, description=f"Vaga {i}", is_allocated=False, is_occupied=False)
                 session.add(ps)
+                new_spaces += 1
         await session.commit()
-    print("ParkingSpaces inseridos.")
+    print(f"{new_spaces} ParkingSpaces inseridos ou já existentes.")
 
 async def seed_subscriptions_and_allocations():
     async with AsyncSessionLocal() as session:
