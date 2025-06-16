@@ -1,32 +1,105 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper } from '@mui/material';
+import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
-const categories = ['Car', 'Motorcycle', 'Truck'];
+const vehicleTypes = ['Car', 'Motorcycle'];
+const commonColors = [
+  'Black',
+  'White',
+  'Silver',
+  'Gray',
+  'Red',
+  'Blue',
+  'Green',
+  'Yellow',
+  'Other'
+];
 
 const AddVehicle: React.FC = () => {
-  const [license, setLicense] = useState('');
-  const [desc, setDesc] = useState('');
-  const [category, setCategory] = useState('Car');
+  const [formData, setFormData] = useState({
+    license_plate: '',
+    make: '',
+    model: '',
+    color: '',
+    type: 'Car'
+  });
+  const [showCustomColor, setShowCustomColor] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent) => {
+    const { name, value } = e.target;
+    
+    if (name === 'color' && value === 'Other') {
+      setShowCustomColor(true);
+      setFormData(prev => ({
+        ...prev,
+        color: ''
+      }));
+    } else if (name === 'color') {
+      setShowCustomColor(false);
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!license.trim() || !desc.trim() || !category) {
-      setError('All fields are required.');
+    setError('');
+
+    // Validate required fields
+    if (!formData.license_plate.trim()) {
+      setError('License plate is required.');
       return;
     }
-    // Here you would send the data to your backend or state management
-    // For now, just navigate back to vehicles
-    setError('');
-    navigate('/vehicles');
+
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      await axios.post(`${API_BASE_URL}/vehicles`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      navigate('/vehicles');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.detail || 'Failed to add vehicle. Please try again.');
+      } else {
+        setError('An unexpected error occurred.');
+      }
+      console.error('Error adding vehicle:', error);
+    }
   };
 
   return (
     <Layout>
-      <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
+      <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
             Add Vehicle
@@ -34,36 +107,93 @@ const AddVehicle: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <TextField
               label="License Plate"
-              value={license}
-              onChange={e => setLicense(e.target.value)}
+              name="license_plate"
+              value={formData.license_plate}
+              onChange={handleTextChange}
               fullWidth
               margin="normal"
               required
+              error={!!error && !formData.license_plate.trim()}
+              helperText={!formData.license_plate.trim() && error ? error : ''}
             />
             <TextField
-              label="Description"
-              value={desc}
-              onChange={e => setDesc(e.target.value)}
+              label="Make"
+              name="make"
+              value={formData.make}
+              onChange={handleTextChange}
               fullWidth
               margin="normal"
-              required
             />
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>Category</InputLabel>
+            <TextField
+              label="Model"
+              name="model"
+              value={formData.model}
+              onChange={handleTextChange}
+              fullWidth
+              margin="normal"
+            />
+            {showCustomColor ? (
+              <TextField
+                label="Custom Color"
+                name="color"
+                value={formData.color}
+                onChange={handleTextChange}
+                fullWidth
+                margin="normal"
+              />
+            ) : (
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Color</InputLabel>
+                <Select
+                  name="color"
+                  value={formData.color}
+                  label="Color"
+                  onChange={handleSelectChange}
+                >
+                  {commonColors.map(color => (
+                    <MenuItem key={color} value={color}>
+                      {color}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Type</InputLabel>
               <Select
-                value={category}
-                label="Category"
-                onChange={e => setCategory(e.target.value as string)}
+                name="type"
+                value={formData.type}
+                label="Type"
+                onChange={handleSelectChange}
               >
-                {categories.map(cat => (
-                  <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                {vehicleTypes.map(type => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
             {error && <Typography color="error" mb={2}>{error}</Typography>}
             <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
-              <Button variant="outlined" color="secondary" onClick={() => navigate('/vehicles')}>Cancel</Button>
-              <Button variant="contained" type="submit" sx={{ background: '#222', color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, '&:hover': { background: '#444' } }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => navigate('/vehicles')}
+                sx={{ borderRadius: 2, textTransform: 'none' }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                type="submit"
+                sx={{ 
+                  background: '#222', 
+                  color: '#fff', 
+                  borderRadius: 2, 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  '&:hover': { background: '#444' } 
+                }}
+              >
                 Add Vehicle
               </Button>
             </Box>

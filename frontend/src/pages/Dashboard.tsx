@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -10,6 +10,9 @@ import {
   Select,
   MenuItem,
   FormControl,
+  Paper,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
@@ -26,6 +29,8 @@ import {
   Legend,
 } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
+import { useVehicles } from '../hooks/useVehicles';
+import { useParking } from '../hooks/useParking';
 
 ChartJS.register(
   CategoryScale,
@@ -36,32 +41,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-const chartData = {
-  labels: [
-    '03 Wed', '04 Thu', '05 Fri', '06 Sat', '07 Sun', '08 Mon', '09 Tue', '10 Wed', '11 Thu', '12 Fri', '13 Sat', '14 Sun', '15 Mon', '16 Tue'
-  ],
-  datasets: [
-    {
-      label: 'Authorized',
-      data: [60, 30, 35, 40, 45, 60, 70, 55, 65, 40, 35, 25, 30, 50],
-      borderColor: '#2ecc40',
-      backgroundColor: '#2ecc40',
-      tension: 0.4,
-      pointRadius: 3,
-      fill: false,
-    },
-    {
-      label: 'Blocked',
-      data: [40, 20, 25, 30, 25, 20, 30, 25, 20, 30, 25, 20, 25, 30],
-      borderColor: '#ff4136',
-      backgroundColor: '#ff4136',
-      tension: 0.4,
-      pointRadius: 3,
-      fill: false,
-    },
-  ],
-};
 
 const chartOptions = {
   responsive: true,
@@ -100,8 +79,67 @@ const chartOptions = {
   },
 };
 
-const Dashboard: React.FC = () => {
+export default function Dashboard() {
   const navigate = useNavigate();
+  // Mock data for overview, dailyStats, spaces
+  const overview = {
+    total_entries: 42,
+    total_revenue: 1234.56,
+    average_duration: 45,
+    peak_hours: ['12:00', '18:00'],
+  };
+  const dailyStats = {
+    '2024-06-01': 5,
+    '2024-06-02': 8,
+    '2024-06-03': 12,
+    '2024-06-04': 7,
+    '2024-06-05': 10,
+  };
+  const {
+    vehicles,
+    total,
+    loading: vehiclesLoading,
+    error: vehiclesError,
+    fetchVehicles,
+  } = useVehicles();
+  const { spaces, total: totalSpaces, loading: parkingLoading, error: parkingError, fetchParkingSpaces } = useParking();
+
+  React.useEffect(() => {
+    fetchVehicles();
+    fetchParkingSpaces();
+    // All other data is mock
+  }, [fetchVehicles, fetchParkingSpaces]);
+
+  const loading = vehiclesLoading;
+  const error = vehiclesError;
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  const chartData = {
+    labels: Object.keys(dailyStats),
+    datasets: [
+      {
+        label: 'Authorized',
+        data: Object.values(dailyStats),
+        borderColor: '#2ecc40',
+        backgroundColor: '#2ecc40',
+        tension: 0.4,
+        pointRadius: 3,
+        fill: false,
+      },
+    ],
+  };
+
   return (
     <Box sx={{ width: '100%', overflowX: 'auto' }}>
       {/* Top bar */}
@@ -141,35 +179,17 @@ const Dashboard: React.FC = () => {
                   <Typography variant="body2" color="#b3c6e0">Active</Typography>
                 </Box>
               </Box>
-              <Typography variant="h3" fontWeight={700}>12</Typography>
-              <Typography variant="body2" color="#b3c6e0">23 entries this month</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card sx={{
-            borderRadius: 4,
-            boxShadow: 0,
-            minHeight: 140,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <MailOutlineIcon sx={{ fontSize: 32, mr: 2, color: '#222' }} />
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Notifications</Typography>
-                </Box>
-              </Box>
-              <Typography variant="h3" fontWeight={700}>2</Typography>
-              <Typography variant="body2" color="text.secondary">New messages</Typography>
+              <Typography variant="h3" fontWeight={700}>{total}</Typography>
+              <Typography variant="body2" color="#b3c6e0">
+                {overview?.total_entries || 0} entries this month
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
           <Card
             sx={{
+              background: '#fff',
               borderRadius: 4,
               boxShadow: 0,
               minHeight: 140,
@@ -180,18 +200,55 @@ const Dashboard: React.FC = () => {
               transition: 'box-shadow 0.2s',
               '&:hover': { boxShadow: 4 },
             }}
-            onClick={() => navigate('/subscriptions')}
+            onClick={() => navigate('/parking-spaces')}
           >
             <CardContent>
               <Box display="flex" alignItems="center" mb={1}>
-                <SubscriptionsIcon sx={{ fontSize: 32, mr: 2, color: '#222' }} />
+                <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Subscriptions</Typography>
-                  <Typography variant="body2" color="text.secondary">2 active</Typography>
+                  <Typography variant="subtitle2" color="#0a2a5c">Parking Spaces</Typography>
+                  <Typography variant="body2" color="#666">Total</Typography>
                 </Box>
               </Box>
-              <Typography variant="h3" fontWeight={700}>$45</Typography>
-              <Typography variant="body2" color="text.secondary">Next payment: <b>12/11/25</b></Typography>
+              <Typography variant="h3" fontWeight={700} color="#0a2a5c">
+                {totalSpaces}
+              </Typography>
+              <Typography variant="body2" color="#666">
+                {spaces.length} loaded
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card
+            sx={{
+              background: '#fff',
+              borderRadius: 4,
+              boxShadow: 0,
+              minHeight: 140,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'box-shadow 0.2s',
+              '&:hover': { boxShadow: 4 },
+            }}
+            onClick={() => navigate('/statistics')}
+          >
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={1}>
+                <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
+                <Box>
+                  <Typography variant="subtitle2" color="#0a2a5c">Revenue</Typography>
+                  <Typography variant="body2" color="#666">This Month</Typography>
+                </Box>
+              </Box>
+              <Typography variant="h3" fontWeight={700} color="#0a2a5c">
+                ${overview?.total_revenue?.toFixed(2) || '0.00'}
+              </Typography>
+              <Typography variant="body2" color="#666">
+                {overview?.average_duration || 0} min avg. duration
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -202,7 +259,7 @@ const Dashboard: React.FC = () => {
           <Card sx={{ borderRadius: 4, boxShadow: 0 }}>
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" fontWeight={600}>Access</Typography>
+                <Typography variant="h6" fontWeight={600}>Access History</Typography>
                 <Box display="flex" gap={2}>
                   <Button variant="outlined" size="small" sx={{ borderRadius: 2, textTransform: 'none' }}>Export data</Button>
                   <FormControl size="small">
@@ -220,8 +277,30 @@ const Dashboard: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+      {/* Parking Overview */}
+      {overview && (
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Parking Overview
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={4}>
+                <Typography variant="subtitle1">Total Revenue</Typography>
+                <Typography variant="h5">${overview.total_revenue.toFixed(2)}</Typography>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Typography variant="subtitle1">Average Duration</Typography>
+                <Typography variant="h5">{overview.average_duration} minutes</Typography>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Typography variant="subtitle1">Peak Hours</Typography>
+                <Typography variant="h5">{overview.peak_hours.join(', ')}</Typography>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+      )}
     </Box>
   );
-};
-
-export default Dashboard;
+}

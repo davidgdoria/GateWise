@@ -1,111 +1,40 @@
-"""Main application entry point."""
-import asyncio
-import logging
 from fastapi import FastAPI
+from app.api.v1.endpoints.auth import router as auth_router
+from app.api.v1.endpoints.vehicles import router as vehicles_router
+from app.api.v1.endpoints.users import router as users_router
+from app.api.v1 import parking_spaces_router
+from fastapi_pagination import add_pagination
+from app.api.v1.endpoints.plans import router as plans_router
+from app.api.v1.endpoints.subscriptions import router as subscriptions_router
+from app.api.v1.endpoints.payments import router as payments_router
+from app.api.v1.endpoints import access
+
+app = FastAPI()
+
+# Configure CORS
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from datetime import datetime
-import uvicorn
-from app.api.api import api_router
-from app.core.config import settings
-from app.services import OCRService, APIService, MonitoringService
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Create FastAPI application
-app = FastAPI(
-    title="GateWise API",
-    description="Smart Parking Management System API",
-    version="1.0.0",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://gatewise.ddns.net"],  # Frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
-# Set all CORS enabled origins
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Auth endpoints: /api/v1/login, /api/v1/me
+app.include_router(auth_router, prefix="/api/v1")
+# Vehicle endpoints: /api/v1/vehicles
+app.include_router(vehicles_router, prefix="/api/v1/vehicles")
+# Admin user endpoints: /api/v1/users
+app.include_router(users_router, prefix="/api/v1/users")
+# Parking spaces endpoints: /api/v1/parking-spaces
+app.include_router(parking_spaces_router, prefix="/api/v1/parking-spaces")
+# Plan endpoints: /api/v1/plans
+app.include_router(plans_router, prefix="/api/v1/plans")
+# Subscription endpoints: /api/v1/subscriptions
+app.include_router(subscriptions_router, prefix="/api/v1/subscriptions")
+# Payments endpoints: /api/v1/payments
+app.include_router(payments_router, prefix="/api/v1/payments")
+app.include_router(access.router, prefix="/api/v1")
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
-
-# Create service instances
-ocr_service = OCRService()
-api_service = APIService()
-monitoring_service = MonitoringService()
-
-@app.on_event("startup")
-async def startup_event():
-    """Start services on application startup."""
-    logger.info("Starting services...")
-    asyncio.create_task(ocr_service.run())
-    # Start monitoring task
-    asyncio.create_task(monitor_system())
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Stop services on application shutdown."""
-    logger.info("Stopping services...")
-    ocr_service.stop()
-
-async def monitor_system():
-    """Monitor system health."""
-    while True:
-        try:
-            metrics = await monitoring_service.get_system_metrics()
-            if metrics:
-                logger.debug(f"System metrics: {metrics}")
-        except Exception as e:
-            logger.error(f"Error monitoring system: {str(e)}")
-        await asyncio.sleep(60)  # Check every minute
-
-@app.get("/")
-async def root():
-    """Root endpoint."""
-    return {
-        "message": "Welcome to GateWise API",
-        "status": "operational",
-        "services": {
-            "api": "running",
-            "ocr": "running" if ocr_service.is_running else "stopped",
-            "monitoring": "running"
-        }
-    }
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    try:
-        service_status = await monitoring_service.get_service_status()
-        system_metrics = await monitoring_service.get_system_metrics()
-        
-        return JSONResponse(
-            content={
-                "status": "healthy",
-                "timestamp": datetime.utcnow().isoformat(),
-                "services": service_status,
-                "system": system_metrics
-            },
-            status_code=200
-        )
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return JSONResponse(
-            content={
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
-            },
-            status_code=500
-        )
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
+add_pagination(app)

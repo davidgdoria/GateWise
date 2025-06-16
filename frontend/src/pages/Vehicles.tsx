@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Box,
   Typography,
@@ -15,6 +16,7 @@ import {
   MenuItem,
   FormControl,
   Pagination,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -22,102 +24,183 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
-const vehicleRows = [
-  { license: '11-AA-11', desc: 'My red car', category: 'Car' },
-  { license: '22-BB-22', desc: 'My yellow Bike', category: 'Motorcycle' },
-  { license: '22-BB-24', desc: 'Ford Fiesta', category: 'Car' },
-  { license: '23-CC-22', desc: 'Focus RS', category: 'Car' },
-  { license: '23-ZZ-22', desc: 'Mustang', category: 'Car' },
-];
+interface Owner {
+  id: number;
+  email: string;
+  full_name: string;
+}
+
+interface Vehicle {
+  id: number;
+  license_plate: string;
+  make: string;
+  model: string;
+  color: string;
+  type: string;
+  owner_id: number;
+  owner: Owner;
+  created_at: string;
+  updated_at: string;
+}
+
+interface VehicleResponse {
+  items: Vehicle[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
 
 const Vehicles: React.FC = () => {
-  const [page, setPage] = useState(2);
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<VehicleResponse>({
+    items: [],
+    total: 0,
+    page: 1,
+    size: 10,
+    pages: 0
+  });
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const token = Cookies.get('access_token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        const response = await axios.get<VehicleResponse>(`${API_BASE_URL}/vehicles`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          params: {
+            page: page,
+            size: 10
+          }
+        });
+
+        console.log('Vehicle data:', response.data);
+        setData(response.data);
+      } catch (error) {
+        console.error('Error fetching vehicles:', error);
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          navigate('/login');
+        }
+        setData({
+          items: [],
+          total: 0,
+          page: 1,
+          size: 10,
+          pages: 0
+        });
+      }
+    };
+
+    fetchVehicles();
+  }, [page, navigate]);
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
   return (
     <Layout>
-      <Box sx={{ width: '100%' }}>
-        <Typography variant="h5" fontWeight={600} mb={3}>
-          Vehicles
-        </Typography>
-        <Box
-          sx={{
-            background: '#fff',
-            borderRadius: 4,
-            p: 3,
-            boxShadow: 0,
-            mb: 4,
-          }}
-        >
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                background: '#222',
-                color: '#fff',
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': { background: '#444' },
-              }}
-              onClick={() => navigate('/vehicles/add')}
-            >
-              Add Vehicle
-            </Button>
-            <Box display="flex" gap={2}>
-              <Button variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
-                Export data
-              </Button>
-              <FormControl size="small">
-                <Select defaultValue="id" sx={{ borderRadius: 2, fontWeight: 500 }}>
-                  <MenuItem value="id">Sort by: ID</MenuItem>
-                  <MenuItem value="license">Sort by: License Plate</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-          <TableContainer component={Paper} sx={{ boxShadow: 'none', borderRadius: 3 }}>
+      <Box sx={{ p: 4 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" fontWeight={600}>
+            Vehicles
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/vehicles/add')}
+            sx={{
+              background: '#222',
+              color: '#fff',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { background: '#444' }
+            }}
+          >
+            Add Vehicle
+          </Button>
+        </Box>
+        <Paper sx={{ p: 3, borderRadius: 2 }}>
+          {error && (
+            <Typography color="error" mb={2}>
+              {error}
+            </Typography>
+          )}
+
+          <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>License Plate</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="center">Actions</TableCell>
+                  <TableCell>License Plate</TableCell>
+                  <TableCell>Make</TableCell>
+                  <TableCell>Model</TableCell>
+                  <TableCell>Color</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {vehicleRows.map((row) => (
-                  <TableRow key={row.license}>
-                    <TableCell sx={{ fontWeight: 700 }}>{row.license}</TableCell>
-                    <TableCell>{row.desc}</TableCell>
-                    <TableCell>{row.category}</TableCell>
-                    <TableCell align="center">
-                      <IconButton size="small" sx={{ color: '#222' }}><EditIcon /></IconButton>
-                      <IconButton size="small" sx={{ color: '#222' }}><DeleteIcon /></IconButton>
-                      <IconButton size="small" sx={{ color: '#222' }}><MoreVertIcon /></IconButton>
+                {data.items.map((vehicle) => (
+                  <TableRow key={vehicle.id}>
+                    <TableCell>{vehicle.license_plate}</TableCell>
+                    <TableCell>{vehicle.make}</TableCell>
+                    <TableCell>{vehicle.model}</TableCell>
+                    <TableCell>{vehicle.color}</TableCell>
+                    <TableCell>{vehicle.type}</TableCell>
+                    <TableCell>
+                      <Tooltip title="Edit">
+                        <IconButton 
+                          onClick={() => navigate(`/vehicles/edit/${vehicle.id}`, { state: { vehicle } })}
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton 
+                          onClick={() => navigate(`/vehicles/delete/${vehicle.id}`)}
+                          size="small"
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
-          <Box display="flex" justifyContent="center" mt={3}>
-            <Pagination
-              count={20}
-              page={page}
-              onChange={(_, value) => setPage(value)}
-              shape="rounded"
-              sx={{
-                '& .Mui-selected': {
-                  background: '#222',
-                  color: '#fff',
-                },
-              }}
-            />
-          </Box>
-        </Box>
+
+          {data.pages > 1 && (
+            <Box display="flex" justifyContent="center" mt={3}>
+              <Pagination
+                count={data.pages}
+                page={data.page}
+                onChange={handlePageChange}
+                shape="rounded"
+                sx={{
+                  '& .Mui-selected': {
+                    background: '#222',
+                    color: '#fff',
+                  },
+                }}
+              />
+            </Box>
+          )}
+        </Paper>
       </Box>
     </Layout>
   );
