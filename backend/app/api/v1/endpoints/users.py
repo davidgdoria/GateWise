@@ -47,6 +47,11 @@ async def edit_user(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    user.full_name = update.full_name
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return UserShortOut.from_orm(user)
 
 @router.get("/{user_id}", response_model=UserShortOut)
 async def get_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
@@ -56,11 +61,6 @@ async def get_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return UserShortOut.from_orm(user)
 
-    user.full_name = update.full_name
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return UserShortOut.from_orm(user)
 async def admin_required(username: str = Depends(verify_token), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
