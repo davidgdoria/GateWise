@@ -140,11 +140,11 @@ const EditUser: React.FC = () => {
               margin="normal"
             />
             <FormControl fullWidth margin="normal">
-              <InputLabel>Type</InputLabel>
+              <InputLabel>Profile</InputLabel>
               <Select
                 name="type"
                 value={formData.type}
-                label="Type"
+                label="Profile"
                 onChange={handleSelectChange}
               >
                 {userTypes.map(type => (
