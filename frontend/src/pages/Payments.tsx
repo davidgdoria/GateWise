@@ -101,9 +101,16 @@ const Payments: React.FC = () => {
           </Typography>
           <Button
             variant="contained"
-            color="primary"
             startIcon={<AddIcon />}
             onClick={() => navigate('/payments/add')}
+            sx={{
+              background: '#222',
+              color: '#fff',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { background: '#444' },
+            }}
           >
             Add Payment
           </Button>
@@ -137,13 +144,12 @@ const Payments: React.FC = () => {
             </Table>
           </TableContainer>
           <TablePagination
-            rowsPerPageOptions={[10, 25, 50]}
             component="div"
             count={totalCount}
-            rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[]}
           />
         </Paper>
       </Box>
