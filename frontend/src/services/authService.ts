@@ -92,7 +92,7 @@ const authService = {
   // Get current user
   getCurrentUser: async () => {
     try {
-      const response = await api.get('/users/me');
+      const response = await api.get('/me');
       return response.data;
     } catch (error) {
       return null;
