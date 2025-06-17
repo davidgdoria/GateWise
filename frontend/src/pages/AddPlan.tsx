@@ -39,7 +39,7 @@ const AddPlan: React.FC = () => {
         setError('You are not authenticated. Please log in again.');
         return;
       }
-      await axios.post(`${API_BASE_URL}/plans/`, {
+      await axios.post(`${API_BASE_URL}/api/v1/plans/`, {
         name: form.name,
         price: parseFloat(form.price),
         num_spaces: parseInt(form.num_spaces, 10),

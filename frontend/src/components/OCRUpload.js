@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import './OCRUpload.css';
+import { Box, Button, Typography, CircularProgress } from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import API_BASE_URL from '../config';
 
 const OCRUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -18,31 +21,25 @@ const OCRUpload = () => {
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setError('Please select an image first');
-      return;
-    }
+  const handleUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
     setLoading(true);
     setError(null);
+    setResult(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE_URL}/ocr/recognize', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/ocr/recognize`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to process image');
+        throw new Error('Failed to process image');
       }
 
       const data = await response.json();

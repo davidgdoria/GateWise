@@ -17,22 +17,32 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
 
+interface User {
+  id: number;
+  full_name: string;
+}
+
+interface Plan {
+  id: number;
+  name: string;
+  price: number;
+}
+
 interface Subscription {
   id: number;
-  user?: {
-    full_name?: string;
-  };
-  plan?: {
-    id: number;
-    name?: string;
-    price?: number;
-  };
+  user_id: number;
+  plan_id: number;
   status: string;
+}
+
+interface SubscriptionWithDetails extends Subscription {
+  user?: User;
+  plan?: Plan;
 }
 
 const AddPayment: React.FC = () => {
   const navigate = useNavigate();
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionWithDetails[]>([]);
   const [selectedSubscription, setSelectedSubscription] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,15 +57,32 @@ const AddPayment: React.FC = () => {
           return;
         }
 
+        // Fetch all active subscriptions
         const response = await axios.get(`${API_BASE_URL}/api/v1/subscriptions`, {
           headers: { 'Authorization': `Bearer ${token}` },
-          params: { status: 'active' }
+          params: { 
+            status: 'active'
+          }
         });
 
-        console.log('Subscriptions response:', response.data);
-        setSubscriptions(response.data.items || []);
+        // Fetch plan details for each subscription
+        const subscriptionsWithDetails = await Promise.all(
+          (response.data.items || []).map(async (subscription: Subscription) => {
+            const planResponse = await axios.get(`${API_BASE_URL}/api/v1/plans/${subscription.plan_id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            return {
+              ...subscription,
+              plan: planResponse.data
+            };
+          })
+        );
+
+        setSubscriptions(subscriptionsWithDetails);
       } catch (err) {
         setError('Failed to fetch subscriptions.');
+        console.error('Error fetching data:', err);
       }
     };
 
@@ -81,7 +108,7 @@ const AddPayment: React.FC = () => {
       }
 
       await axios.post(
-        `${API_BASE_URL}/api/v1/payments`,
+        `${API_BASE_URL}/api/v1/payments/`,
         {
           subscription_id: selectedSubscription,
           amount: selectedSub.plan?.price || 0
@@ -97,6 +124,7 @@ const AddPayment: React.FC = () => {
       navigate('/payments');
     } catch (err) {
       setError('Failed to create payment.');
+      console.error('Error creating payment:', err);
     } finally {
       setLoading(false);
     }
@@ -129,7 +157,7 @@ const AddPayment: React.FC = () => {
                   >
                     {subscriptions.map((subscription) => (
                       <MenuItem key={subscription.id} value={subscription.id}>
-                        {subscription.user?.full_name || 'Unknown User'} - {subscription.plan?.name || 'Unknown Plan'}
+                        Subscription #{subscription.id} - {subscription.plan?.name || 'Unknown Plan'}
                       </MenuItem>
                     ))}
                   </Select>
@@ -146,7 +174,7 @@ const AddPayment: React.FC = () => {
               <Grid item xs={12}>
                 <TextField
                   label="Amount"
-                  value={selectedSubscriptionData?.plan?.price ? `$${selectedSubscriptionData.plan.price.toFixed(2)}` : ''}
+                  value={selectedSubscriptionData?.plan?.price ? `€${selectedSubscriptionData.plan.price.toFixed(2)}` : ''}
                   fullWidth
                   disabled
                 />

@@ -31,7 +31,7 @@ const EditPlan: React.FC = () => {
           setLoading(false);
           return;
         }
-        const response = await axios.get(`${API_BASE_URL}/plans/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/plans/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -75,7 +75,7 @@ const EditPlan: React.FC = () => {
         setError('You are not authenticated. Please log in again.');
         return;
       }
-      await axios.put(`${API_BASE_URL}/plans/${id}`, {
+      await axios.put(`${API_BASE_URL}/api/v1/plans/${id}`, {
         name: form.name,
         price: parseFloat(form.price),
         num_spaces: parseInt(form.num_spaces, 10),

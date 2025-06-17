@@ -79,7 +79,7 @@ const AddVehicle: React.FC = () => {
         return;
       }
 
-      await axios.post(`${API_BASE_URL}/vehicles`, formData, {
+      await axios.post(`${API_BASE_URL}/api/v1/vehicles`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

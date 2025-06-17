@@ -75,7 +75,7 @@ const Vehicles: React.FC = () => {
           return;
         }
 
-        const response = await axios.get<VehicleResponse>(`${API_BASE_URL}/vehicles`, {
+        const response = await axios.get<VehicleResponse>(`${API_BASE_URL}/api/v1/vehicles`, {
           headers: {
             'Authorization': `Bearer ${token}`
           },

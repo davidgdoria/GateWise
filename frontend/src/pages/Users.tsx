@@ -126,7 +126,7 @@ const Users: React.FC = () => {
                   <TableCell>Username</TableCell>
                   <TableCell>Full Name</TableCell>
                   <TableCell>Email</TableCell>
-                  <TableCell>Profile</TableCell>
+                  <TableCell>Type</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>

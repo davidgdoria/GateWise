@@ -8,7 +8,6 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
-import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 import AddVehicle from './pages/AddVehicle';
 import Subscriptions from './pages/Subscriptions';
@@ -32,11 +31,12 @@ import ParkingSpaces from './pages/Parking';
 import AddParkingSpace from './pages/AddParkingSpace';
 import EditParkingSpace from './pages/EditParkingSpace';
 import AssignParkingSpaces from './pages/AssignParkingSpaces';
+import AddPayment from './pages/AddPayment';
 
 const queryClient = new QueryClient();
 
 const adminOnlyRoutes = [
-  '/vehicles/add', '/alerts', '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
+  '/vehicles/add', '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
 ];
 
 // Protected route component
@@ -127,13 +127,6 @@ function App() {
                 </Layout>
               </ProtectedRouteComponent>
             } />
-            <Route path="/alerts" element={
-              <ProtectedRouteComponent>
-                <Layout>
-                  <Alerts />
-                </Layout>
-              </ProtectedRouteComponent>
-            } />
             <Route path="/settings" element={
               <ProtectedRouteComponent>
                 <Layout>
@@ -166,6 +159,13 @@ function App() {
               <ProtectedRouteComponent>
                 <Layout>
                   <Payments />
+                </Layout>
+              </ProtectedRouteComponent>
+            } />
+            <Route path="/payments/add" element={
+              <ProtectedRouteComponent>
+                <Layout>
+                  <AddPayment />
                 </Layout>
               </ProtectedRouteComponent>
             } />

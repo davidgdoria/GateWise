@@ -37,29 +37,51 @@ const AssignParkingSpaces: React.FC = () => {
           navigate('/login');
           return;
         }
-
-        // First, get the total count
-        const countRes = await axios.get(`${API_BASE_URL}/parking-spaces`, {
+        // Fetch unallocated spaces for dropdown options
+        const res = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
           headers: { 'Authorization': `Bearer ${token}` },
-          params: { page: 1, size: 1 } // Just get the first item to get total count
+          params: { is_allocated: false }
         });
-
-        const total = countRes.data.total;
-
-        // Then fetch all spaces in one call
-        const res = await axios.get(`${API_BASE_URL}/parking-spaces`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          params: { page: 1, size: total } // Get all spaces
-        });
-
-        // Filter for unallocated spaces
-        setSpaces((res.data.items || res.data).filter((s: ParkingSpace) => !s.is_allocated));
+        setSpaces(res.data.items || res.data);
       } catch (err) {
         setError('Failed to fetch parking spaces.');
       }
     };
+
+    const fetchAssignedSpaces = async () => {
+      setError('');
+      try {
+        const token = Cookies.get('access_token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        // Fetch spaces already allocated to this subscription
+        const res = await axios.get(
+          `${API_BASE_URL}/api/v1/subscriptions/${subscription.id}/parking-spaces`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        // Get the assigned spaces and add them to the spaces list
+        const assignedSpaces = res.data || [];
+        setSpaces(prevSpaces => [...prevSpaces, ...assignedSpaces]);
+        
+        // Pre-fill the dropdowns with assigned spaces
+        if (subscription?.spaces_allocated) {
+          const assignedIds = assignedSpaces.map((space: any) => space.id);
+          setSelectedSpaces([
+            ...assignedIds,
+            ...Array(Math.max(0, subscription.spaces_allocated - assignedIds.length)).fill('')
+          ]);
+        }
+      } catch (err) {
+        setError('Failed to fetch assigned parking spaces.');
+      }
+    };
+
     fetchSpaces();
-    if (subscription?.spaces_allocated) {
+    if (subscription?.id && subscription?.spaces_allocated) {
+      fetchAssignedSpaces();
+    } else if (subscription?.spaces_allocated) {
       setSelectedSpaces(Array(subscription.spaces_allocated).fill(''));
     }
   }, [navigate, subscription]);
@@ -77,6 +99,46 @@ const AssignParkingSpaces: React.FC = () => {
     return spaces.filter(space =>
       !selectedSpaces.includes(space.id) || selectedSpaces[idx] === space.id
     );
+  };
+
+  const handleAllocateSpaces = async () => {
+    setError('');
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      // Allocate spaces to subscription
+      await axios.post(
+        `${API_BASE_URL}/api/v1/subscriptions/${subscription.id}/allocate_spaces`,
+        { parking_space_ids: selectedSpaces.filter(id => id) },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      // Update each parking space to set is_allocated: true
+      await Promise.all(
+        selectedSpaces.filter(id => id).map(id =>
+          axios.put(
+            `${API_BASE_URL}/api/v1/parking-spaces/${id}`,
+            { is_allocated: true },
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          )
+        )
+      );
+      navigate('/subscriptions');
+    } catch (err) {
+      setError('Failed to allocate parking spaces.');
+    }
   };
 
   if (!subscription || !user || !plan) {
@@ -123,8 +185,14 @@ const AssignParkingSpaces: React.FC = () => {
           {error && <Typography color="error" mb={2}>{error}</Typography>}
           <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
             <Button variant="outlined" color="secondary" onClick={() => navigate('/subscriptions')}>Cancel</Button>
-            <Button variant="contained" disabled sx={{ background: '#222', color: '#fff', borderRadius: 2, textTransform: 'none', fontWeight: 600, '&:hover': { background: '#444' } }}>
-              Assign (Coming Soon)
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAllocateSpaces}
+              disabled={selectedSpaces.filter(id => id).length === 0}
+              sx={{ mt: 3 }}
+            >
+              Assign Spaces
             </Button>
           </Box>
         </Paper>

@@ -59,7 +59,7 @@ const Plans: React.FC = () => {
           window.location.href = '/login';
           return;
         }
-        const response = await axios.get(`${API_BASE_URL}/plans/`, {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/plans/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           },
@@ -95,7 +95,7 @@ const Plans: React.FC = () => {
         window.location.href = '/login';
         return;
       }
-      await axios.delete(`${API_BASE_URL}/plans/${planToDelete.id}`, {
+      await axios.delete(`${API_BASE_URL}/api/v1/plans/${planToDelete.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

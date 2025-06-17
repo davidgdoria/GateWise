@@ -2,11 +2,9 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
 
-const API_URL = `${API_BASE_URL}`; // Uses docker-compose/env variable
-
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_BASE_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -38,7 +36,7 @@ api.interceptors.response.use(
       
       try {
         // Try to refresh the token
-        const response = await axios.post(`${API_URL}/refresh-token`);
+        const response = await axios.post(`${API_BASE_URL}/api/v1/refresh-token`);
         
         const { access_token } = response.data;
         
@@ -94,7 +92,7 @@ const authService = {
   // Get current user
   getCurrentUser: async () => {
     try {
-      const response = await api.get('/me');
+      const response = await api.get('/users/me');
       return response.data;
     } catch (error) {
       return null;
@@ -119,25 +117,6 @@ const authService = {
       new_password: newPassword
     });
     return response.data;
-  },
-
-  getUserFullName: async () => {
-    const token = Cookies.get('access_token');
-    if (!token) {
-      throw new Error('No access token found');
-    }
-
-    try {
-      const response = await api.get('/users/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data.full_name;
-    } catch (error) {
-      console.error('Error fetching user full name:', error);
-      throw error;
-    }
   }
 };
 

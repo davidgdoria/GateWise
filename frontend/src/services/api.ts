@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import Cookies from 'js-cookie';
+import API_BASE_URL from '../config';
 
 declare global {
   interface Window {
@@ -9,18 +10,19 @@ declare global {
   }
 }
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Create axios instance
+const api = axios.create({
+  baseURL: `${API_BASE_URL}/api/v1`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 class ApiClient {
   private client: AxiosInstance;
 
   constructor() {
-    this.client = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+    this.client = api;
 
     // Add request interceptor for authentication
     this.client.interceptors.request.use(
@@ -95,33 +97,6 @@ class ApiClient {
 
   async deleteVehicle(id: number): Promise<void> {
     await this.client.delete(`/vehicles/${id}`);
-  }
-
-  // Alert methods
-  async getAlerts(page: number, size: number): Promise<AlertResponse> {
-    const response = await this.client.get<AlertResponse>('/alerts', {
-      params: { page, size }
-    });
-    return response.data;
-  }
-
-  async getAlert(id: number): Promise<Alert> {
-    const response = await this.client.get<Alert>(`/alerts/${id}`);
-    return response.data;
-  }
-
-  async createAlert(alert: Omit<Alert, 'id'>): Promise<Alert> {
-    const response = await this.client.post<Alert>('/alerts', alert);
-    return response.data;
-  }
-
-  async updateAlert(id: number, alert: Partial<Alert>): Promise<Alert> {
-    const response = await this.client.put<Alert>(`/alerts/${id}`, alert);
-    return response.data;
-  }
-
-  async deleteAlert(id: number): Promise<void> {
-    await this.client.delete(`/alerts/${id}`);
   }
 
   // Plan methods
@@ -225,20 +200,13 @@ export const plansApi = {
 // };
 
 // Alerts endpoints
-export const alertApi = {
-  getAlerts: () => apiClient.getAlerts(1, 10),
-  getAlert: (id: number) => apiClient.getAlert(id),
-  createAlert: (data: any) => apiClient.createAlert(data),
-  updateAlert: (id: number, data: any) => apiClient.updateAlert(id, data),
-  resolveAlert: (id: number) => apiClient.deleteAlert(id),
-};
-
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// export const alertApi = {
+//   getAlerts: () => apiClient.getAlerts(1, 10),
+//   getAlert: (id: number) => apiClient.getAlert(id),
+//   createAlert: (data: any) => apiClient.createAlert(data),
+//   updateAlert: (id: number, data: any) => apiClient.updateAlert(id, data),
+//   resolveAlert: (id: number) => apiClient.deleteAlert(id),
+// };
 
 interface User {
   id: number;
@@ -281,24 +249,6 @@ interface VehicleResponse {
   pages: number;
 }
 
-interface Alert {
-  id: number;
-  title: string;
-  description: string;
-  type: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AlertResponse {
-  items: Alert[];
-  total: number;
-  page: number;
-  size: number;
-  pages: number;
-}
-
 interface Plan {
   id: number;
   name: string;
@@ -325,13 +275,6 @@ interface ApiClient {
   createVehicle(vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle>;
   updateVehicle(id: number, vehicle: Partial<Vehicle>): Promise<Vehicle>;
   deleteVehicle(id: number): Promise<void>;
-
-  // Alert methods
-  getAlerts(page: number, size: number): Promise<AlertResponse>;
-  getAlert(id: number): Promise<Alert>;
-  createAlert(alert: Omit<Alert, 'id'>): Promise<Alert>;
-  updateAlert(id: number, alert: Partial<Alert>): Promise<Alert>;
-  deleteAlert(id: number): Promise<void>;
 
   // Plan methods
   getPlans(page: number, size: number): Promise<PlanResponse>;

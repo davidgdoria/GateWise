@@ -39,7 +39,7 @@ const EditParkingSpace: React.FC = () => {
             navigate('/login');
             return;
           }
-          const res = await axios.get(`${API_BASE_URL}/parking-spaces/${id}`,
+          const res = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces/${id}`,
             { headers: { 'Authorization': `Bearer ${token}` } });
           setForm({
             name: res.data.name || '',
@@ -75,7 +75,7 @@ const EditParkingSpace: React.FC = () => {
         navigate('/login');
         return;
       }
-      await axios.put(`${API_BASE_URL}/parking-spaces/${id}`, form, {
+      await axios.put(`${API_BASE_URL}/api/v1/parking-spaces/${id}`, form, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -130,7 +130,7 @@ const EditParkingSpace: React.FC = () => {
                   onChange={handleChange}
                   name="is_allocated"
                   color="primary"
-                  disabled
+                  
                 />
               }
               label="Allocated"

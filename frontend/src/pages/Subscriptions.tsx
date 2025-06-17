@@ -92,14 +92,14 @@ const Subscriptions: React.FC = () => {
           return;
         }
         const [subsRes, usersRes, plansRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/subscriptions/`, {
+          axios.get(`${API_BASE_URL}/api/v1/subscriptions/`, {
             headers: { 'Authorization': `Bearer ${token}` },
             params: { page, size: 10 }
           }),
-          axios.get(`${API_BASE_URL}/users/`, {
+          axios.get(`${API_BASE_URL}/api/v1/users/`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          axios.get(`${API_BASE_URL}/plans/`, {
+          axios.get(`${API_BASE_URL}/api/v1/plans/`, {
             headers: { 'Authorization': `Bearer ${token}` },
             params: { size: 1000 }
           })
@@ -139,7 +139,7 @@ const Subscriptions: React.FC = () => {
         window.location.href = '/login';
         return;
       }
-      await axios.patch(`${API_BASE_URL}/subscriptions/${subscriptionToDelete.id}/cancel`, {}, {
+      await axios.patch(`${API_BASE_URL}/api/v1/subscriptions/${subscriptionToDelete.id}/cancel`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
