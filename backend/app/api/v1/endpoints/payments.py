@@ -64,6 +64,19 @@ async def get_payment(payment_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Payment not found")
     return payment
 
+@router.post("/{payment_id}/mark_as_paid", response_model=PaymentOut)
+async def mark_payment_as_paid(payment_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Payment).where(Payment.id == payment_id))
+    payment = result.scalar_one_or_none()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    payment.status = "paid"
+    payment.paid_at = datetime.utcnow()
+    db.add(payment)
+    await db.commit()
+    await db.refresh(payment)
+    return payment
+
 @router.get("/total-paid", response_model=float, dependencies=[Depends(admin_required)])
 async def total_paid(
     db: AsyncSession = Depends(get_db),
