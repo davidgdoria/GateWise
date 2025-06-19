@@ -5,7 +5,7 @@ from app.models.schemas import PaymentCreate, PaymentOut
 from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.db.session import get_db
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi_pagination import Page, paginate
 
 router = APIRouter()
@@ -53,6 +53,33 @@ from app.models.user import User
 
 from app.models.schemas import PaymentWithDetailsOut
 from sqlalchemy.orm import joinedload
+
+from fastapi import Query
+
+@router.get("/total-paid", response_model=float, dependencies=[Depends(admin_required)])
+async def total_paid(
+    db: AsyncSession = Depends(get_db),
+    start_date: datetime = Query(None, description="Data inicial (ISO 8601)", alias="start_date"),
+    end_date: datetime = Query(None, description="Data final (ISO 8601)", alias="end_date")
+):
+    now = datetime.utcnow()
+    if not start_date:
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if not end_date:
+        if start_date.month == 12:
+            end_date = start_date.replace(year=start_date.year+1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        else:
+            end_date = start_date.replace(month=start_date.month+1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    result = await db.execute(
+        select(Payment.amount)
+        .where(
+            Payment.status == "paid",
+            Payment.paid_at >= start_date,
+            Payment.paid_at < end_date
+        )
+    )
+    total = sum([row[0] for row in result.all()])
+    return total
 
 @router.get("/", response_model=Page[PaymentWithDetailsOut])
 async def list_payments(
