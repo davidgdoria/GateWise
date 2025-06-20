@@ -109,6 +109,30 @@ const Vehicles: React.FC = () => {
     setPage(value);
   };
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this vehicle?')) return;
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      await axios.delete(`${API_BASE_URL}/api/v1/vehicles/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setData(prev => ({
+        ...prev,
+        items: prev.items.filter(v => v.id !== id),
+        total: prev.total - 1
+      }));
+    } catch (err) {
+      console.error('Error deleting vehicle:', err);
+      setError('Failed to delete vehicle. Please try again.');
+    }
+  };
+
   return (
     <Layout>
       <Box sx={{ p: 4 }}>
@@ -170,7 +194,7 @@ const Vehicles: React.FC = () => {
                       </Tooltip>
                       <Tooltip title="Delete">
                         <IconButton 
-                          onClick={() => navigate(`/vehicles/delete/${vehicle.id}`)}
+                          onClick={() => handleDelete(vehicle.id)}
                           size="small"
                           color="error"
                         >
