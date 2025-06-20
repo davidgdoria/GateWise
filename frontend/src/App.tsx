@@ -36,7 +36,7 @@ import AddPayment from './pages/AddPayment';
 const queryClient = new QueryClient();
 
 const adminOnlyRoutes = [
-  '/vehicles/add', '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
+  '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
 ];
 
 // Protected route component
@@ -47,7 +47,7 @@ const ProtectedRouteComponent = ({ children }: { children: React.ReactNode }) =>
   // All users can access dashboard, vehicles, subscriptions
   if (
     location.startsWith('/dashboard') ||
-    location.startsWith('/vehicles') && location !== '/vehicles/add' ||
+    location.startsWith('/vehicles') ||
     location.startsWith('/subscriptions') && location !== '/subscriptions/add'
   ) {
     return <>{children}</>;
