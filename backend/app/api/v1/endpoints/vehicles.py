@@ -8,7 +8,8 @@ from app.db.session import get_db
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import selectinload
 
 router = APIRouter()
@@ -27,15 +28,11 @@ async def list_vehicles(
     from sqlalchemy.orm import selectinload
     if user.type.value == "admin":
         # Admin vê todos os veículos
-        vehicles = await db.execute(
-            select(Vehicle).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
-        )
+        query = select(Vehicle).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
     else:
         # Usuário comum vê só os seus
-        vehicles = await db.execute(
-            select(Vehicle).where(Vehicle.owner_id == user.id).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
-        )
-    return paginate([VehicleOut.from_orm(v) for v in vehicles.scalars().all()])
+        query = select(Vehicle).where(Vehicle.owner_id == user.id).options(selectinload(Vehicle.owner)).order_by(Vehicle.created_at.desc())
+    return await paginate(db, query)
 
 @router.post("/", response_model=VehicleOut, status_code=201)
 async def create_vehicle(

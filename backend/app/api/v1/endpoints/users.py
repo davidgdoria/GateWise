@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.models.schemas import Token, UserShortOut
 from pydantic import BaseModel
 from pydantic import BaseModel
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from app.models.user import User, UserType
 from app.db.session import get_db
 from sqlalchemy.future import select
@@ -158,9 +159,8 @@ async def list_users(
     _: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(User))
-    users = result.scalars().all()
-    return paginate(users)
+    query = select(User)
+    return await paginate(db, query)
 
 from fastapi import Request
 

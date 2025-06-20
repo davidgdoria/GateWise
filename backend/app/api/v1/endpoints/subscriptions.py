@@ -77,9 +77,8 @@ async def get_current_user(username: str = Depends(verify_token), db: AsyncSessi
 
 @router.get("/my", response_model=Page[SubscriptionOut])
 async def list_my_subscriptions(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    result = await db.execute(select(Subscription).where(Subscription.user_id == current_user.id))
-    subscriptions = result.scalars().all()
-    return paginate(subscriptions)
+    query = select(Subscription).where(Subscription.user_id == current_user.id)
+    return await paginate(db, query)
 
 from fastapi import Path
 
@@ -127,9 +126,11 @@ async def associate_vehicle_to_parking_space(
 
 @router.get("/", response_model=Page[SubscriptionOut], dependencies=[Depends(admin_required)])
 async def list_subscriptions(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Subscription))
-    subscriptions = result.scalars().all()
-    return paginate(subscriptions)
+    query = select(Subscription)
+    from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
+    page = await sqlalchemy_paginate(db, query)
+    page.items = [SubscriptionOut.model_validate(item, from_attributes=True) for item in page.items]
+    return page
 
 @router.post("/{subscription_id}/allocate_spaces", response_model=SubscriptionParkingSpacesOut, dependencies=[Depends(admin_required)])
 async def allocate_parking_spaces(subscription_id: int, allocation: ParkingSpaceAllocation = Body(...), db: AsyncSession = Depends(get_db)):
@@ -174,16 +175,8 @@ from app.models.schemas import ParkingSpaceWithVehicleOut, VehicleOut
 
 @router.get("/{subscription_id}/parking-spaces", response_model=Page[ParkingSpaceWithVehicleOut], dependencies=[Depends(admin_required)])
 async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(ParkingSpace).options(selectinload(ParkingSpace.vehicle)).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
-    )
-    spaces = result.scalars().all()
-    output = []
-    for s in spaces:
-        vehicle = VehicleOut.from_orm(s.vehicle) if s.vehicle else None
-        data = {k: v for k, v in s.__dict__.items() if k != 'vehicle'}
-        output.append(ParkingSpaceWithVehicleOut(**data, vehicle=vehicle))
-    return paginate(output)
+    query = select(ParkingSpace).options(selectinload(ParkingSpace.vehicle)).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
+    return await paginate(db, query)
 
 from datetime import datetime
 

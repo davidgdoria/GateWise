@@ -6,7 +6,8 @@ from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.db.session import get_db
 from datetime import datetime, timedelta
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Params, Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 
 router = APIRouter()
 
@@ -105,6 +106,7 @@ async def total_paid(
 @router.get("/", response_model=Page[PaymentWithDetailsOut])
 async def list_payments(
     subscription_id: int = None,
+    params: Params = Depends(),
     username: str = Depends(verify_token),
     db: AsyncSession = Depends(get_db)
 ):
@@ -124,18 +126,37 @@ async def list_payments(
         sub_result = await db.execute(select(Subscription.id).where(Subscription.user_id == user.id))
         user_sub_ids = [row[0] for row in sub_result.all()]
         query = query.where(Payment.subscription_id.in_(user_sub_ids))
-    result = await db.execute(query.order_by(Payment.paid_at.desc()))
-    payments = result.scalars().all()
-    enriched = [
-        PaymentWithDetailsOut(
-            id=p.id,
-            subscription_id=p.subscription_id,
-            amount=p.amount,
-            paid_at=p.paid_at,
-            status=p.status,
-            plan_name=p.subscription.plan.name if p.subscription and p.subscription.plan else None,
-            user_full_name=p.subscription.user.full_name if p.subscription and p.subscription.user else None
-        ) for p in payments
-    ]
-    return paginate(enriched)
-
+    query = query.order_by(Payment.paid_at.desc())
+    # Manual pagination
+    total_result = await db.execute(query.with_only_columns(Payment.id).order_by(None))
+    total = len(total_result.scalars().all())
+    paged_query = query.limit(params.size).offset(params.size * (params.page - 1))
+    result = await db.execute(paged_query)
+    payments = result.scalars().unique().all()
+    import logging
+    enriched_items = []
+    for payment in payments:
+        plan_name = ""
+        user_full_name = ""
+        if not payment.subscription:
+            logging.warning(f"Payment ID {payment.id} has no subscription.")
+        else:
+            if not payment.subscription.plan:
+                logging.warning(f"Subscription ID {payment.subscription.id} for Payment ID {payment.id} has no plan.")
+            else:
+                plan_name = payment.subscription.plan.name or ""
+            if not payment.subscription.user:
+                logging.warning(f"Subscription ID {payment.subscription.id} for Payment ID {payment.id} has no user.")
+            else:
+                user_full_name = payment.subscription.user.full_name or ""
+        enriched_items.append({
+            "id": payment.id,
+            "subscription_id": payment.subscription_id,
+            "amount": payment.amount,
+            "paid_at": payment.paid_at,
+            "status": payment.status,
+            "plan_name": plan_name,
+            "user_full_name": user_full_name
+        })
+    items = [PaymentWithDetailsOut.model_validate(item) for item in enriched_items]
+    return Page.create(items=items, total=total, params=params)

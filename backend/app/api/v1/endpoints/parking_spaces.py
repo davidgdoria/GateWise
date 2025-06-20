@@ -6,7 +6,8 @@ from app.models.parking_space import ParkingSpace
 from app.db.session import get_db
 from app.models.user import User, UserType
 from pydantic import BaseModel
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from app.models.schemas import ParkingSpaceOut, ParkingSpaceUpdate
 
 router = APIRouter()
@@ -53,9 +54,7 @@ async def list_parking_spaces(
         query = query.where(ParkingSpace.is_allocated == is_allocated)
     if name:
         query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
-    result = await db.execute(query)
-    parking_spaces = result.scalars().all()
-    return paginate(parking_spaces)
+    return await paginate(db, query)
 
 @router.put("/{parking_space_id}", response_model=ParkingSpaceOut)
 async def update_parking_space(

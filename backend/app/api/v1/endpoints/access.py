@@ -7,7 +7,8 @@ from app.models.subscription import Subscription
 from app.models.access_log import AccessLog
 from app.models.user import User
 from app.models.schemas import AccessLogOut, AccessLogUserOut
-from fastapi_pagination import paginate, Page
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from app.api.v1.endpoints.users import admin_required
 from app.api.v1.endpoints.subscriptions import get_current_user
 from pydantic import BaseModel
@@ -60,9 +61,8 @@ async def check_vehicle_access(data: AccessCheckIn, db: AsyncSession = Depends(g
 
 @router.get("/access_logs", response_model=Page[AccessLogOut], dependencies=[Depends(admin_required)])
 async def list_access_logs(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(AccessLog).order_by(AccessLog.timestamp.desc()))
-    logs = result.scalars().all()
-    return paginate(logs)
+    query = select(AccessLog).order_by(AccessLog.timestamp.desc())
+    return await paginate(db, query)
 
 @router.get("/access_logs/my", response_model=Page[AccessLogUserOut])
 async def list_my_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):

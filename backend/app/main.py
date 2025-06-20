@@ -15,7 +15,13 @@ app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://gatewise.ddns.net"],  # Frontend URL
+    allow_origins=[
+        "http://gatewise.ddns.net",  # Deployed frontend
+        "http://localhost:3000",     # Local frontend (adjust port if needed)
+        "http://localhost",          # Sometimes frontends use just localhost without a port
+        "http://127.0.0.1:3000",     # Common local IP for frontend dev
+        "http://127.0.0.1"           # Local IP without port
+    ],  # Frontend URLs
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
