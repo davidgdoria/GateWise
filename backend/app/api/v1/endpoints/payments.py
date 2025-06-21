@@ -57,6 +57,42 @@ from sqlalchemy.orm import joinedload
 
 from fastapi import Query
 
+@router.get("/summary", dependencies=[Depends(admin_required)])
+async def payments_summary(db: AsyncSession = Depends(get_db)):
+    """Return monthly expected amount, pending count, pending amount"""
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if now.month == 12:
+        month_end = month_start.replace(year=now.year+1, month=1)
+    else:
+        month_end = month_start.replace(month=now.month+1)
+
+    # Paid this month
+    result = await db.execute(
+        select(Payment.amount).where(
+            Payment.status == "paid",
+            Payment.paid_at != None,  # noqa: E711
+            Payment.paid_at >= month_start,
+            Payment.paid_at < month_end,
+        )
+    )
+    paid_amount = sum([row[0] for row in result.all()])
+
+    # Pending payments (not paid yet)
+    pending_q = await db.execute(select(Payment.amount).where(Payment.status == "pending"))
+    pending_rows = pending_q.all()
+    pending_amount = sum([row[0] for row in pending_rows])
+    pending_count = len(pending_rows)
+
+    expected_amount = paid_amount + pending_amount
+
+    return {
+        "expected_amount_this_month": expected_amount,
+        "pending_payments_count": pending_count,
+        "pending_payments_amount": pending_amount,
+    }
+
+
 @router.get("/total-paid", response_model=float, dependencies=[Depends(admin_required)])
 async def total_paid(
     db: AsyncSession = Depends(get_db),
