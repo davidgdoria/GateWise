@@ -5,10 +5,10 @@ from app.db.session import get_db
 from app.models.vehicle import Vehicle
 from app.models.subscription import Subscription
 from app.models.access_log import AccessLog
-from app.models.user import User
+from app.models.user import User, UserType
 from app.models.schemas import AccessLogOut, AccessLogUserOut
 from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from app.api.v1.endpoints.users import admin_required
 from app.api.v1.endpoints.subscriptions import get_current_user
 from pydantic import BaseModel
@@ -59,10 +59,18 @@ async def check_vehicle_access(data: AccessCheckIn, db: AsyncSession = Depends(g
     await db.commit()
     return AccessCheckOut(access_granted=access_granted, reason=reason)
 
-@router.get("/access_logs", response_model=Page[AccessLogOut], dependencies=[Depends(admin_required)])
-async def list_access_logs(db: AsyncSession = Depends(get_db)):
-    query = select(AccessLog).order_by(AccessLog.timestamp.desc())
-    return await paginate(db, query)
+@router.get("/access_logs", response_model=Page[AccessLogOut])
+async def list_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.type == UserType.admin:
+        query = select(AccessLog).order_by(AccessLog.timestamp.desc())
+        return await sqlalchemy_paginate(db, query)
+    else:
+        # Retrieve vehicles owned by the current user
+        vehicles_result = await db.execute(select(Vehicle).where(Vehicle.owner_id == current_user.id))
+        vehicles = vehicles_result.scalars().all()
+        plates = [v.license_plate for v in vehicles]
+        query = select(AccessLog).where(AccessLog.license_plate.in_(plates)).order_by(AccessLog.timestamp.desc())
+        return await sqlalchemy_paginate(db, query)
 
 @router.get("/access_logs/my", response_model=Page[AccessLogUserOut])
 async def list_my_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):

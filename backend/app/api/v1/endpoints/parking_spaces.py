@@ -3,11 +3,14 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.parking_space import ParkingSpace
+from app.models.subscription_parking_space import SubscriptionParkingSpace
+from app.models.subscription import Subscription
 from app.db.session import get_db
 from app.models.user import User, UserType
 from pydantic import BaseModel
 from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
+from app.api.v1.endpoints.subscriptions import get_current_user
 from app.models.schemas import ParkingSpaceOut, ParkingSpaceUpdate
 
 router = APIRouter()
@@ -47,14 +50,19 @@ async def list_parking_spaces(
     is_allocated: Optional[bool] = Query(None),
     name: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(admin_required)
+    current_user: User = Depends(get_current_user)
 ):
     query = select(ParkingSpace)
     if is_allocated is not None:
         query = query.where(ParkingSpace.is_allocated == is_allocated)
     if name:
         query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
-    return await paginate(db, query)
+    if current_user.type == UserType.admin:
+        return await sqlalchemy_paginate(db, query)
+    else:
+        # spaces linked to user subscriptions
+        query = select(ParkingSpace).join(SubscriptionParkingSpace).join(Subscription).where(Subscription.user_id == current_user.id)
+        return await sqlalchemy_paginate(db, query)
 
 @router.put("/{parking_space_id}", response_model=ParkingSpaceOut)
 async def update_parking_space(
