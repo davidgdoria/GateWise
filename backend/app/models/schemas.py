@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 
 class LoginRequest(BaseModel):
@@ -36,6 +36,13 @@ class SubscriptionCreate(BaseModel):
     start_date: datetime | None = None
     status: str = "active"
     cancellation_date: datetime | None = None
+
+    # Accept empty string and convert to None so API treats as today
+    @validator("start_date", pre=True)
+    def empty_string_to_none(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
 
 class SubscriptionOut(BaseModel):
     id: int
