@@ -56,6 +56,7 @@ const ParkingSpaces: React.FC = () => {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState<ParkingSpace | null>(null);
+  const userType = Cookies.get('user_type');
 
   useEffect(() => {
     const fetchSpaces = async () => {
@@ -123,21 +124,23 @@ const ParkingSpaces: React.FC = () => {
           <Typography variant="h5" fontWeight={600}>
             Parking Spaces
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={{
-              background: '#222',
-              color: '#fff',
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              '&:hover': { background: '#444' },
-            }}
-            onClick={() => navigate('/parking-spaces/add')}
-          >
-            Add Parking Space
-          </Button>
+          {userType === 'admin' && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                background: '#222',
+                color: '#fff',
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { background: '#444' },
+              }}
+              onClick={() => navigate('/parking-spaces/add')}
+            >
+              Add Parking Space
+            </Button>
+          )}
         </Box>
         <Box
           sx={{
@@ -164,7 +167,9 @@ const ParkingSpaces: React.FC = () => {
                     <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Allocated</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Occupied</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                    {userType === 'admin' && (
+                      <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                    )}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -190,20 +195,24 @@ const ParkingSpaces: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="small"
-                          onClick={() => navigate(`/parking-spaces/edit/${space.id}`, { state: { space } })}
-                          sx={{ minWidth: 0, color: '#222', mr: 1 }}
-                        >
-                          <EditIcon />
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() => handleDeleteClick(space)}
-                          sx={{ minWidth: 0, color: 'error.main' }}
-                        >
-                          <DeleteIcon />
-                        </Button>
+                        {userType === 'admin' && (
+                          <>
+                            <Button
+                              size="small"
+                              onClick={() => navigate(`/parking-spaces/edit/${space.id}`, { state: { space } })}
+                              sx={{ minWidth: 0, color: '#222', mr: 1 }}
+                            >
+                              <EditIcon />
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => handleDeleteClick(space)}
+                              sx={{ minWidth: 0, color: 'error.main' }}
+                            >
+                              <DeleteIcon />
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

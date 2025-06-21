@@ -27,6 +27,7 @@ const AssignParkingSpaces: React.FC = () => {
   const [spaces, setSpaces] = useState<ParkingSpace[]>([]);
   const [selectedSpaces, setSelectedSpaces] = useState<(number | '')[]>([]);
   const [error, setError] = useState('');
+  const userType = Cookies.get('user_type');
 
   useEffect(() => {
     const fetchSpaces = async () => {
@@ -173,6 +174,7 @@ const AssignParkingSpaces: React.FC = () => {
                 value={selectedSpaces[idx]}
                 label={`Parking Space #${idx + 1}`}
                 onChange={e => handleSelect(idx, e.target.value as number)}
+                disabled={userType === 'user'}
               >
                 {getAvailableSpaces(idx).map(space => (
                   <MenuItem key={space.id} value={space.id}>
@@ -184,16 +186,20 @@ const AssignParkingSpaces: React.FC = () => {
           ))}
           {error && <Typography color="error" mb={2}>{error}</Typography>}
           <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
-            <Button variant="outlined" color="secondary" onClick={() => navigate('/subscriptions')}>Cancel</Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAllocateSpaces}
-              disabled={selectedSpaces.filter(id => id).length === 0}
-              sx={{ mt: 3 }}
-            >
-              Assign Spaces
+            <Button variant="outlined" color="secondary" onClick={() => navigate('/subscriptions')}>
+              {userType === 'user' ? 'Back' : 'Cancel'}
             </Button>
+            {userType === 'admin' && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAllocateSpaces}
+                disabled={selectedSpaces.filter(id => id).length === 0}
+                sx={{ mt: 3 }}
+              >
+                Assign Spaces
+              </Button>
+            )}
           </Box>
         </Paper>
       </Box>
