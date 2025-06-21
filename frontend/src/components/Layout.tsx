@@ -71,8 +71,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const menuItems = getMenuItems();
-  const hasSidebar = menuItems.length > 0;
-  const sidebarWidth = hasSidebar ? drawerWidth : 0;
 
   return (
     <Box sx={{ display: 'flex', background: '#f7f7f7', minHeight: '100vh', overflow: 'hidden' }}>
@@ -145,7 +143,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           p: 4,
-          width: `calc(100% - ${sidebarWidth}px)`,
+          width: `calc(100% - ${drawerWidth}px)`,
           minHeight: '100vh',
           background: '#f7f7f7',
           minWidth: 0,
