@@ -114,7 +114,7 @@ const Payments: React.FC = () => {
             >
               Add Payment
             </Button>
-          )>
+          )}
         </Box>
         {error && (
           <Typography color="error" mb={2}>
