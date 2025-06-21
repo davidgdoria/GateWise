@@ -49,7 +49,8 @@ const ProtectedRouteComponent = ({ children }: { children: React.ReactNode }) =>
   if (
     location.startsWith('/dashboard') ||
     location.startsWith('/vehicles') ||
-    location.startsWith('/subscriptions') && location !== '/subscriptions/add'
+    location.startsWith('/parking-spaces') ||
+    (location.startsWith('/subscriptions') && location !== '/subscriptions/add')
   ) {
     return <>{children}</>;
   }
