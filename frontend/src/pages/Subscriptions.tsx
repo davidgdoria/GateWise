@@ -33,6 +33,20 @@ import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
 import AssignParkingSpaces from './AssignParkingSpaces';
 
+interface User {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
+interface Plan {
+  id: number;
+  name: string;
+  price: number;
+  num_spaces: number;
+  duration_days: number;
+}
+
 interface Subscription {
   id: number;
   user_id: number;
@@ -43,6 +57,8 @@ interface Subscription {
   cancellation_date: string | null;
   spaces_allocated: number;
   price_at_subscription: number;
+  user: User;
+  plan: Plan;
 }
 
 interface User {
@@ -83,8 +99,7 @@ const Subscriptions: React.FC = () => {
     size: 10,
     pages: 0
   });
-  const [users, setUsers] = useState<User[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const userPayload = decodeToken();
@@ -94,7 +109,7 @@ const Subscriptions: React.FC = () => {
   const [subscriptionToDelete, setSubscriptionToDelete] = useState<Subscription | null>(null);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchSubscriptions = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -103,40 +118,21 @@ const Subscriptions: React.FC = () => {
           navigate('/login');
           return;
         }
-        const [subsRes, usersRes, plansRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/v1/subscriptions/`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-            params: { page, size: 10 }
-          }),
-          axios.get(`${API_BASE_URL}/api/v1/users/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          axios.get(`${API_BASE_URL}/api/v1/plans/`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-            params: { size: 1000 }
-          })
-        ]);
+        const subsRes = await axios.get(`${API_BASE_URL}/api/v1/subscriptions/`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          params: { page, size: 10 }
+        });
         setData(subsRes.data);
-        setUsers(usersRes.data.items || usersRes.data); // handle both array and paginated
-        setPlans(plansRes.data.items || plansRes.data); // handle both array and paginated
       } catch (err) {
-        setError('Failed to fetch subscriptions, users, or plans');
+        setError('Failed to fetch subscriptions');
       } finally {
         setLoading(false);
       }
     };
-    fetchAll();
+    fetchSubscriptions();
   }, [page, navigate]);
 
-  const getUserName = (user_id: number) => {
-    const user = users.find(u => u.id === user_id);
-    return user ? user.full_name : user_id;
-  };
-
-  const getPlanName = (plan_id: number) => {
-    const plan = plans.find(p => p.id === plan_id);
-    return plan ? plan.name : plan_id;
-  };
+  
 
   const handleCancelClick = (sub: Subscription) => {
     setSubscriptionToDelete(sub);
@@ -242,8 +238,8 @@ const Subscriptions: React.FC = () => {
                 <TableBody>
                   {Array.isArray(data.items) && data.items.map((sub: Subscription) => (
                     <TableRow key={sub.id}>
-                      <TableCell>{getUserName(sub.user_id)}</TableCell>
-                      <TableCell>{getPlanName(sub.plan_id)}</TableCell>
+                      <TableCell>{sub.user?.full_name ?? sub.user_id}</TableCell>
+                      <TableCell>{sub.plan?.name ?? sub.plan_id}</TableCell>
                       <TableCell>{sub.spaces_allocated}</TableCell>
                       <TableCell>
                         <Chip
@@ -260,9 +256,7 @@ const Subscriptions: React.FC = () => {
                               size="small" 
                               sx={{ color: 'primary.main', mr: 1 }}
                               onClick={() => {
-                                const userObj = users.find(u => u.id === sub.user_id);
-                                const planObj = plans.find(p => p.id === sub.plan_id);
-                                navigate('/assign-parking', { state: { subscription: sub, user: userObj, plan: planObj } });
+                                navigate('/assign-parking', { state: { subscription: sub, user: sub.user, plan: sub.plan } });
                               }}
                             >
                               <LocalParkingIcon />
