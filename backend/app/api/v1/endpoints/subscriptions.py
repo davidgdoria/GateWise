@@ -51,9 +51,22 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
         spaces_allocated=plan.num_spaces,
         price_at_subscription=plan.price
     )
+    # Persist subscription
     db.add(new_subscription)
     await db.commit()
     await db.refresh(new_subscription)
+
+    # Create an initial pending payment record corresponding to this subscription
+    pending_payment = Payment(
+        subscription_id=new_subscription.id,
+        amount=plan.price,
+        paid_at=None,
+        status="pending"
+    )
+    db.add(pending_payment)
+    await db.commit()
+    await db.refresh(pending_payment)
+
     return new_subscription
 
 from fastapi_pagination import Page, paginate
