@@ -22,7 +22,6 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
@@ -134,7 +133,6 @@ const Vehicles: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ p: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h4" fontWeight={600}>
@@ -226,7 +224,6 @@ const Vehicles: React.FC = () => {
           )}
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

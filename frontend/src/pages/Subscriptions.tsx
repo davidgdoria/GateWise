@@ -27,7 +27,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -165,7 +164,7 @@ const Subscriptions: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <Box>
       <Box sx={{ maxWidth: '100%', ml: 0, mt: 0, pl: 0 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={600}>
@@ -295,7 +294,7 @@ const Subscriptions: React.FC = () => {
           <Button onClick={handleCancelConfirm} color="warning" variant="contained">Yes, cancel it</Button>
         </DialogActions>
       </Dialog>
-    </Layout>
+    </Box>
   );
 };
 

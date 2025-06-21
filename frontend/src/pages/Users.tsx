@@ -17,7 +17,6 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { apiClient } from '../services/api';
@@ -90,7 +89,6 @@ const Users: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ p: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h4" fontWeight={600}>
@@ -180,7 +178,6 @@ const Users: React.FC = () => {
           )}
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

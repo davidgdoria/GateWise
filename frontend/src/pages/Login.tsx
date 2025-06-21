@@ -70,7 +70,15 @@ const Login = () => {
         if (data.type) {
           Cookies.set('user_type', data.type, { expires: 1 });
         }
-        navigate('/dashboard');
+        
+        // Check if there's a stored redirect URL
+        const redirectUrl = localStorage.getItem('paymentRedirectUrl');
+        if (redirectUrl) {
+          localStorage.removeItem('paymentRedirectUrl');
+          window.location.href = redirectUrl;
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError('Invalid login response');
       }

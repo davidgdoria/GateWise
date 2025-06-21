@@ -6,7 +6,6 @@ import {
   Tab,
   Paper,
 } from '@mui/material';
-import Layout from '../components/Layout';
 import UsersTab from '../components/settings/UsersTab';
 import PlansTab from '../components/settings/PlansTab';
 import SubscriptionsTab from '../components/settings/SubscriptionsTab';
@@ -53,7 +52,6 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ p: 4, background: '#f7f7f7', minHeight: '100vh' }}>
         <Typography variant="h4" fontWeight={600} mb={4}>
           Settings
@@ -96,7 +94,6 @@ const Settings: React.FC = () => {
           </TabPanel>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

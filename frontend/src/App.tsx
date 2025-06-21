@@ -32,6 +32,7 @@ import AddParkingSpace from './pages/AddParkingSpace';
 import EditParkingSpace from './pages/EditParkingSpace';
 import AssignParkingSpaces from './pages/AssignParkingSpaces';
 import AddPayment from './pages/AddPayment';
+import PaymentLink from './pages/PaymentLink';
 
 const queryClient = new QueryClient();
 
@@ -234,6 +235,7 @@ function App() {
                 </Layout>
               </ProtectedRouteComponent>
             } />
+            <Route path="/payments/link" element={<PaymentLink />} />
 
             
             {/* Redirect to landing page for unknown routes */}

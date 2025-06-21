@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Paper, CircularProgress, FormControlLabel, Checkbox } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -89,16 +88,13 @@ const EditParkingSpace: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -159,7 +155,6 @@ const EditParkingSpace: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 
