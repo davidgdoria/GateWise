@@ -10,9 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Select,
-  MenuItem,
-  FormControl,
   Pagination,
   Chip,
   IconButton,
@@ -206,17 +203,6 @@ const Subscriptions: React.FC = () => {
             mb: 4,
           }}
         >
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Button variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
-              Export data
-            </Button>
-            <FormControl size="small">
-              <Select defaultValue="id" sx={{ borderRadius: 2, fontWeight: 500 }}>
-                <MenuItem value="id">Sort by: ID</MenuItem>
-                <MenuItem value="plan">Sort by: Plan</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
               <CircularProgress />
