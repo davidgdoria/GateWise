@@ -13,72 +13,140 @@ import {
   IconButton,
   TablePagination,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Divider,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import API_BASE_URL from '../../config';
 
-interface ParkingSpace {
+interface ParkingLot {
   id: number;
   name: string;
   location: string;
-  status: string;
-  subscription_id?: number;
-  user_full_name?: string;
+  totalSpaces: number;
+  hourlyRate: number;
+  dailyRate: number;
+  status: 'active' | 'inactive' | 'maintenance';
+  description: string;
 }
 
 const ParkingSpacesTab: React.FC = () => {
   const navigate = useNavigate();
-  const [parkingSpaces, setParkingSpaces] = useState<ParkingSpace[]>([]);
-  const [error, setError] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
+  const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
+  const [lotDeleteDialogOpen, setLotDeleteDialogOpen] = useState(false);
+  const [lotToDelete, setLotToDelete] = useState<ParkingLot | null>(null);
+  const [addLotDialogOpen, setAddLotDialogOpen] = useState(false);
+  const [newLot, setNewLot] = useState({
+    name: '',
+    location: '',
+    totalSpaces: 0,
+    hourlyRate: 0,
+    dailyRate: 0,
+    description: ''
+  });
+
+  // Mock data for parking lots
+  const mockParkingLots: ParkingLot[] = [
+    {
+      id: 1,
+      name: 'Downtown Parking Center',
+      location: '123 Main Street, Downtown',
+      totalSpaces: 150,
+      hourlyRate: 2.50,
+      dailyRate: 15.00,
+      status: 'active',
+      description: 'Multi-level parking facility in the heart of downtown'
+    },
+    {
+      id: 2,
+      name: 'Airport Parking Lot',
+      location: '456 Airport Road',
+      totalSpaces: 200,
+      hourlyRate: 3.00,
+      dailyRate: 20.00,
+      status: 'active',
+      description: 'Convenient parking near the airport terminal'
+    },
+    {
+      id: 3,
+      name: 'Shopping Mall Parking',
+      location: '789 Mall Boulevard',
+      totalSpaces: 300,
+      hourlyRate: 1.50,
+      dailyRate: 10.00,
+      status: 'active',
+      description: 'Large parking area serving the shopping mall'
+    },
+    {
+      id: 4,
+      name: 'Office Building Parking',
+      location: '321 Business District',
+      totalSpaces: 80,
+      hourlyRate: 4.00,
+      dailyRate: 25.00,
+      status: 'maintenance',
+      description: 'Premium parking for office building tenants'
+    }
+  ];
 
   useEffect(() => {
-    const fetchParkingSpaces = async () => {
-      setError('');
-      try {
-        const token = Cookies.get('access_token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
+    // Set mock data
+    setParkingLots(mockParkingLots);
+  }, []);
 
-        const response = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          params: {
-            page: page + 1,
-            per_page: rowsPerPage
-          }
-        });
-
-        setParkingSpaces(response.data.items || []);
-        setTotalCount(response.data.total || 0);
-      } catch (err) {
-        setError('Failed to fetch parking spaces.');
-        console.error('Error fetching parking spaces:', err);
-      }
-    };
-
-    fetchParkingSpaces();
-  }, [navigate, page, rowsPerPage]);
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+  const handleLotDeleteClick = (lot: ParkingLot) => {
+    setLotToDelete(lot);
+    setLotDeleteDialogOpen(true);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'available':
+  const handleLotDeleteConfirm = () => {
+    if (!lotToDelete) return;
+    setParkingLots(parkingLots.filter(lot => lot.id !== lotToDelete.id));
+    setLotDeleteDialogOpen(false);
+    setLotToDelete(null);
+  };
+
+  const handleLotDeleteCancel = () => {
+    setLotDeleteDialogOpen(false);
+    setLotToDelete(null);
+  };
+
+  const handleAddLot = () => {
+    const newLotWithId: ParkingLot = {
+      id: Math.max(...parkingLots.map(lot => lot.id)) + 1,
+      ...newLot,
+      status: 'active'
+    };
+    setParkingLots([...parkingLots, newLotWithId]);
+    setAddLotDialogOpen(false);
+    setNewLot({
+      name: '',
+      location: '',
+      totalSpaces: 0,
+      hourlyRate: 0,
+      dailyRate: 0,
+      description: ''
+    });
+  };
+
+  const getLotStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
         return 'success';
-      case 'occupied':
-        return 'error';
-      case 'reserved':
+      case 'inactive':
+        return 'default';
+      case 'maintenance':
         return 'warning';
       default:
         return 'default';
@@ -89,12 +157,12 @@ const ParkingSpacesTab: React.FC = () => {
     <Box>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" fontWeight={600}>
-          Parking Spaces Management
+          Parking Lots Management
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/parking-spaces/add')}
+          onClick={() => setAddLotDialogOpen(true)}
           sx={{
             background: '#222',
             color: '#fff',
@@ -104,124 +172,156 @@ const ParkingSpacesTab: React.FC = () => {
             '&:hover': { background: '#444' },
           }}
         >
-          Add Parking Space
+          Add Parking Lot
         </Button>
       </Box>
-      {error && (
-        <Typography color="error" mb={2}>
-          {error}
-        </Typography>
-      )}
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          boxShadow: 'none', 
-          borderRadius: 2,
-          border: '1px solid #e0e0e0',
-          '& .MuiTableHead-root': {
-            backgroundColor: '#f5f5f5',
-            '& .MuiTableCell-root': {
-              borderBottom: '2px solid #e0e0e0',
-              fontWeight: 600,
-              color: '#333',
-              padding: '16px',
-            },
-          },
-          '& .MuiTableBody-root': {
-            '& .MuiTableRow-root': {
-              '&:hover': {
-                backgroundColor: '#f5f5f5',
-              },
-              '& .MuiTableCell-root': {
-                borderBottom: '1px solid #e0e0e0',
-                padding: '16px',
-                color: '#333',
-              },
-            },
-          },
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Assigned To</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {parkingSpaces.map((space) => (
-              <TableRow key={space.id}>
-                <TableCell>{space.name}</TableCell>
-                <TableCell>{space.location}</TableCell>
-                <TableCell>
+      
+      <Grid container spacing={3}>
+        {parkingLots.map((lot) => (
+          <Grid item xs={12} md={6} lg={4} key={lot.id}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                  <Typography variant="h6" fontWeight={600} sx={{ flex: 1 }}>
+                    {lot.name}
+                  </Typography>
                   <Chip
-                    label={space.status}
-                    color={getStatusColor(space.status) as any}
+                    label={lot.status}
+                    color={getLotStatusColor(lot.status) as any}
                     size="small"
-                    sx={{ 
-                      fontWeight: 500,
-                      '&.MuiChip-root': {
-                        height: '24px',
-                        borderRadius: '12px',
-                      },
-                    }}
+                    sx={{ fontWeight: 600 }}
                   />
-                </TableCell>
-                <TableCell>{space.user_full_name || 'Not assigned'}</TableCell>
-                <TableCell>
-                  <Box display="flex" gap={1}>
-                    <IconButton
-                      size="small"
-                      onClick={() => navigate(`/parking-spaces/edit/${space.id}`)}
-                      sx={{ 
-                        color: 'primary.main',
-                        '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                        },
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      sx={{ 
-                        color: 'error.main',
-                        '&:hover': {
-                          backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                        },
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        component="div"
-        count={totalCount}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[]}
-        sx={{
-          '.MuiTablePagination-select': {
-            display: 'none',
-          },
-          '.MuiTablePagination-selectLabel': {
-            display: 'none',
-          },
-          '.MuiTablePagination-displayedRows': {
-            margin: 0,
-          },
-        }}
-      />
+                </Box>
+                
+                <Box display="flex" alignItems="center" mb={1}>
+                  <LocationOnIcon sx={{ fontSize: 16, color: '#666', mr: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {lot.location}
+                  </Typography>
+                </Box>
+                
+                <Typography variant="body2" color="text.secondary" mb={2}>
+                  {lot.description}
+                </Typography>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Rates
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        €{lot.hourlyRate}/hr
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        €{lot.dailyRate}/day
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+              
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Button
+                  size="small"
+                  startIcon={<EditIcon />}
+                  sx={{ color: '#222', textTransform: 'none' }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => handleLotDeleteClick(lot)}
+                  sx={{ color: 'error.main', textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Delete Lot Dialog */}
+      <Dialog open={lotDeleteDialogOpen} onClose={handleLotDeleteCancel}>
+        <DialogTitle>Delete Parking Lot</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete the parking lot "{lotToDelete?.name}"?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleLotDeleteCancel} color="secondary">Cancel</Button>
+          <Button onClick={handleLotDeleteConfirm} color="error" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Lot Dialog */}
+      <Dialog open={addLotDialogOpen} onClose={() => setAddLotDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Parking Lot</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Parking Lot Name"
+                value={newLot.name}
+                onChange={(e) => setNewLot({ ...newLot, name: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Location"
+                value={newLot.location}
+                onChange={(e) => setNewLot({ ...newLot, location: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Description"
+                value={newLot.description}
+                onChange={(e) => setNewLot({ ...newLot, description: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Total Spaces"
+                value={newLot.totalSpaces}
+                onChange={(e) => setNewLot({ ...newLot, totalSpaces: parseInt(e.target.value) || 0 })}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Hourly Rate (€)"
+                value={newLot.hourlyRate}
+                onChange={(e) => setNewLot({ ...newLot, hourlyRate: parseFloat(e.target.value) || 0 })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Daily Rate (€)"
+                value={newLot.dailyRate}
+                onChange={(e) => setNewLot({ ...newLot, dailyRate: parseFloat(e.target.value) || 0 })}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddLotDialogOpen(false)} color="secondary">Cancel</Button>
+          <Button onClick={handleAddLot} variant="contained" sx={{ background: '#222' }}>Add Lot</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

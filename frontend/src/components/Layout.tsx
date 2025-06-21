@@ -55,15 +55,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const commonItems = [
       { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
       { text: 'Vehicles', icon: <DirectionsCarIcon />, path: '/vehicles' },
-      { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
+      { text: 'Parking Spaces', icon: <ParkingIcon />, path: '/parking-spaces' },
       { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
+      { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
     ];
 
     const adminItems = [
-      { text: 'Plans', icon: <AssignmentTurnedInIcon />, path: '/plans' },
-      { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
       { text: 'Users', icon: <PeopleIcon />, path: '/users' },
-      { text: 'Parking Spaces', icon: <ParkingIcon />, path: '/parking-spaces' },
       { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
     ];
 
@@ -99,25 +97,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Typography>
         </Toolbar>
         <List sx={{ mt: 2 }}>
-          {menuItems.map((item) => (
-            <ListItem
-              button
-              key={item.text}
-              onClick={() => navigate(item.path)}
-              selected={location.pathname === item.path}
-              sx={{
-                color: location.pathname === item.path ? '#b3c6e0' : '#fff',
-                borderRadius: 1,
-                mx: 1,
-                mb: 0.5,
-                fontWeight: 500,
-              }}
-            >
-              <ListItemIcon sx={{ color: location.pathname === item.path ? '#b3c6e0' : '#fff' }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
+          {menuItems.map((item, index) => (
+            <React.Fragment key={item.text}>
+              <ListItem
+                button
+                onClick={() => navigate(item.path)}
+                selected={location.pathname === item.path}
+                sx={{
+                  color: location.pathname === item.path ? '#b3c6e0' : '#fff',
+                  borderRadius: 1,
+                  mx: 1,
+                  mb: 0.5,
+                  fontWeight: 500,
+                }}
+              >
+                <ListItemIcon sx={{ color: location.pathname === item.path ? '#b3c6e0' : '#fff' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItem>
+              {/* Add separator after Subscriptions for admin users */}
+              {userType === 'admin' && item.text === 'Subscriptions' && (
+                <Divider sx={{ my: 1, background: '#b3c6e0', mx: 2 }} />
+              )}
+            </React.Fragment>
           ))}
         </List>
         <Box flex={1} />

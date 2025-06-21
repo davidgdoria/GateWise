@@ -22,7 +22,6 @@ const ContactUsInternal: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 6 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -74,7 +73,6 @@ const ContactUsInternal: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

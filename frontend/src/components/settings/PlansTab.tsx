@@ -13,6 +13,10 @@ import {
   IconButton,
   TablePagination,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -39,6 +43,8 @@ const PlansTab: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<Plan | null>(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -50,27 +56,54 @@ const PlansTab: React.FC = () => {
           return;
         }
 
-        const response = await axios.get(`${API_BASE_URL}/api/v1/plans`, {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/plans/`, {
           headers: { 'Authorization': `Bearer ${token}` },
           params: {
-            page: page + 1,
-            per_page: rowsPerPage
+            size: 10
           }
         });
-
-        setPlans(response.data.items || []);
-        setTotalCount(response.data.total || 0);
+        console.log('Plans API response:', response.data);
+        setPlans(response.data);
       } catch (err) {
-        setError('Failed to fetch plans.');
-        console.error('Error fetching plans:', err);
+        setError('Failed to fetch plans');
       }
     };
-
     fetchPlans();
-  }, [navigate, page, rowsPerPage]);
+  }, []);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
+  };
+
+  const handleDeleteClick = (plan: Plan) => {
+    setPlanToDelete(plan);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!planToDelete) return;
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      await axios.delete(`${API_BASE_URL}/api/v1/plans/${planToDelete.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      setPlans(plans.filter(plan => plan.id !== planToDelete.id));
+      setDeleteDialogOpen(false);
+      setPlanToDelete(null);
+    } catch (err) {
+      alert('Failed to delete plan.');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setPlanToDelete(null);
   };
 
   return (
@@ -104,41 +137,20 @@ const PlansTab: React.FC = () => {
         component={Paper} 
         sx={{ 
           boxShadow: 'none', 
-          borderRadius: 2,
+          borderRadius: 3,
           border: '1px solid #e0e0e0',
-          '& .MuiTableHead-root': {
-            backgroundColor: '#f5f5f5',
-            '& .MuiTableCell-root': {
-              borderBottom: '2px solid #e0e0e0',
-              fontWeight: 600,
-              color: '#333',
-              padding: '16px',
-            },
-          },
-          '& .MuiTableBody-root': {
-            '& .MuiTableRow-root': {
-              '&:hover': {
-                backgroundColor: '#f5f5f5',
-              },
-              '& .MuiTableCell-root': {
-                borderBottom: '1px solid #e0e0e0',
-                padding: '16px',
-                color: '#333',
-              },
-            },
-          },
         }}
       >
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Spaces</TableCell>
-              <TableCell>Duration</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Price</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Num Spaces</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Duration (days)</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Active</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -148,44 +160,21 @@ const PlansTab: React.FC = () => {
                 <TableCell>{plan.description}</TableCell>
                 <TableCell>€{plan.price.toFixed(2)}</TableCell>
                 <TableCell>{plan.num_spaces}</TableCell>
-                <TableCell>{plan.duration_days} days</TableCell>
+                <TableCell>{plan.duration_days}</TableCell>
                 <TableCell>
                   <Chip
                     label={plan.active ? 'Active' : 'Inactive'}
                     color={plan.active ? 'success' : 'default'}
+                    sx={{ fontWeight: 700, fontSize: 15, px: 2 }}
                     size="small"
-                    sx={{ 
-                      fontWeight: 500,
-                      '&.MuiChip-root': {
-                        height: '24px',
-                        borderRadius: '12px',
-                      },
-                    }}
                   />
                 </TableCell>
                 <TableCell>
-                  <Box display="flex" gap={1}>
-                    <IconButton
-                      size="small"
-                      onClick={() => navigate(`/plans/edit/${plan.id}`)}
-                      sx={{ 
-                        color: 'primary.main',
-                        '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                        },
-                      }}
-                    >
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <IconButton size="small" onClick={() => navigate(`/plans/edit/${plan.id}`)} sx={{ color: '#222' }}>
                       <EditIcon />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      sx={{ 
-                        color: 'error.main',
-                        '&:hover': {
-                          backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                        },
-                      }}
-                    >
+                    <IconButton size="small" onClick={() => handleDeleteClick(plan)} sx={{ color: 'error.main' }}>
                       <DeleteIcon />
                     </IconButton>
                   </Box>
@@ -202,18 +191,17 @@ const PlansTab: React.FC = () => {
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[]}
-        sx={{
-          '.MuiTablePagination-select': {
-            display: 'none',
-          },
-          '.MuiTablePagination-selectLabel': {
-            display: 'none',
-          },
-          '.MuiTablePagination-displayedRows': {
-            margin: 0,
-          },
-        }}
       />
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Plan</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete the plan "{planToDelete?.name}"?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="secondary">Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
