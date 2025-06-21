@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.subscription import Subscription
-from app.models.schemas import SubscriptionCreate, SubscriptionOut
+from app.models.schemas import SubscriptionCreate, SubscriptionOut, SubscriptionWithDetailsOut
 from app.models.payment import Payment
 from app.api.v1.endpoints.users import admin_required
 from app.db.session import get_db
@@ -125,16 +125,17 @@ async def associate_vehicle_to_parking_space(
     await db.commit()
     return VehicleParkingAssociationOut(vehicle_id=data.vehicle_id, parking_space_id=parking_space_id)
 
-@router.get("/", response_model=Page[SubscriptionOut])
+@router.get("/", response_model=Page[SubscriptionWithDetailsOut])
 async def list_subscriptions(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Admins get all subscriptions; regular users only their own."""
     if current_user.type == UserType.admin:
-        query = select(Subscription)
+        query = select(Subscription).options(selectinload(Subscription.user), selectinload(Subscription.plan))
     else:
-        query = select(Subscription).where(Subscription.user_id == current_user.id)
+        query = select(Subscription).where(Subscription.user_id == current_user.id).options(selectinload(Subscription.user), selectinload(Subscription.plan))
 
     page = await sqlalchemy_paginate(db, query)
-    page.items = [SubscriptionOut.model_validate(item, from_attributes=True) for item in page.items]
+    # Convert to schema with nested relations
+    page.items = [SubscriptionWithDetailsOut.model_validate(item, from_attributes=True) for item in page.items]
     return page
 
 @router.post("/{subscription_id}/allocate_spaces", response_model=SubscriptionParkingSpacesOut, dependencies=[Depends(admin_required)])

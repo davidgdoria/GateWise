@@ -112,6 +112,10 @@ async def delete_vehicle(
     vehicle = result.scalar_one_or_none()
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found or not owned by user")
-    await db.delete(vehicle)
-    await db.commit()
+    try:
+        await db.delete(vehicle)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Cannot delete vehicle with existing dependencies")
     return None

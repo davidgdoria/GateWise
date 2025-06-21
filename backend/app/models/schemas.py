@@ -51,6 +51,10 @@ class SubscriptionOut(BaseModel):
     class Config:
         from_attributes = True
 
+class SubscriptionWithDetailsOut(SubscriptionOut):
+    user: "UserShortOut"
+    plan: "PlanOut"
+
 class ParkingSpaceAllocation(BaseModel):
     parking_space_ids: list[int]
 
