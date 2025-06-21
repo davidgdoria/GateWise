@@ -17,7 +17,6 @@ import {
   DialogContent,
   DialogActions
 } from '@mui/material';
-import Layout from '../components/Layout';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
@@ -118,7 +117,7 @@ const ParkingSpaces: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <Box>
       <Box sx={{ maxWidth: '100%', ml: 0, mt: 0, pl: 0 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={600}>
@@ -238,7 +237,7 @@ const ParkingSpaces: React.FC = () => {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
-    </Layout>
+    </Box>
   );
 };
 

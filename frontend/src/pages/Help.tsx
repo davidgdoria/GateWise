@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Typography, Paper, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemText } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Layout from '../components/Layout';
 
 const faqs = [
   {
@@ -36,7 +35,6 @@ const faqs = [
 
 const Help: React.FC = () => {
   return (
-    <Layout>
       <Box sx={{ maxWidth: 800, mx: 'auto', mt: 6 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h4" fontWeight={700} mb={3}>
@@ -59,7 +57,6 @@ const Help: React.FC = () => {
           </List>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

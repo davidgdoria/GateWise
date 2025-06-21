@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiClient, userApi } from '../services/api';
 import Cookies from 'js-cookie';
@@ -96,16 +95,13 @@ const EditUser: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
           <Typography>Loading...</Typography>
         </Box>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -191,7 +187,6 @@ const EditUser: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

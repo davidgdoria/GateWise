@@ -14,7 +14,6 @@ import {
   TablePagination,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -93,7 +92,6 @@ const Payments: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ p: 4, background: '#f7f7f7', minHeight: '100vh' }}>
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h4" fontWeight={600}>
@@ -129,6 +127,8 @@ const Payments: React.FC = () => {
                   <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Plan</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -138,6 +138,15 @@ const Payments: React.FC = () => {
                     <TableCell>{payment.user_full_name || 'N/A'}</TableCell>
                     <TableCell>{payment.plan_name || 'N/A'}</TableCell>
                     <TableCell>€{payment.amount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={payment.status}
+                        color={getStatusColor(payment.status)}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>{format(parseISO(payment.paid_at), 'dd/MM/yyyy HH:mm')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -153,7 +162,6 @@ const Payments: React.FC = () => {
           />
         </Paper>
       </Box>
-    </Layout>
   );
 };
 
