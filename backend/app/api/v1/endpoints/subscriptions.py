@@ -187,14 +187,17 @@ async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession
 
 from datetime import datetime
 
-@router.patch("/{subscription_id}/cancel", response_model=SubscriptionOut, dependencies=[Depends(admin_required)])
-async def cancel_subscription(subscription_id: int, db: AsyncSession = Depends(get_db)):
+@router.patch("/{subscription_id}/cancel", response_model=SubscriptionOut)
+async def cancel_subscription(subscription_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     result = await db.execute(select(Subscription).where(Subscription.id == subscription_id))
     subscription = result.scalar_one_or_none()
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
     if subscription.status == "cancelled":
         raise HTTPException(status_code=400, detail="Subscription already cancelled")
+    # permission check: owner or admin
+    if current_user.type != UserType.admin and subscription.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not allowed to cancel this subscription")
     subscription.status = "cancelled"
     subscription.cancellation_date = datetime.utcnow()
     db.add(subscription)
