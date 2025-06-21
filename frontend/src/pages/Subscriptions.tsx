@@ -63,6 +63,17 @@ interface SubscriptionResponse {
   pages: number;
 }
 
+const decodeToken = (): any | null => {
+  try {
+    const token = Cookies.get('access_token');
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
 const Subscriptions: React.FC = () => {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<SubscriptionResponse>({
@@ -76,6 +87,8 @@ const Subscriptions: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const userPayload = decodeToken();
+  const isAdmin = userPayload?.type === 'admin';
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [subscriptionToDelete, setSubscriptionToDelete] = useState<Subscription | null>(null);
@@ -170,21 +183,23 @@ const Subscriptions: React.FC = () => {
           <Typography variant="h5" fontWeight={600}>
             Subscriptions
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={{
-              background: '#222',
-              color: '#fff',
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              '&:hover': { background: '#444' },
-            }}
-            onClick={() => navigate('/subscriptions/add')}
-          >
-            New subscription
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                background: '#222',
+                color: '#fff',
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { background: '#444' },
+              }}
+              onClick={() => navigate('/subscriptions/add')}
+            >
+              New subscription
+            </Button>
+          )}
         </Box>
         <Box
           sx={{
