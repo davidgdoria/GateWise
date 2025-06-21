@@ -37,7 +37,7 @@ import PaymentLink from './pages/PaymentLink';
 const queryClient = new QueryClient();
 
 const adminOnlyRoutes = [
-  '/settings', '/subscriptions/add', '/reports', '/payments', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
+  '/settings', '/subscriptions/add', '/reports', '/payments/add', '/dashboard/contact', '/help', '/plans', '/about', '/contact', '/users', '/parking-spaces'
 ];
 
 // Protected route component

@@ -32,6 +32,7 @@ interface Payment {
 
 const Payments: React.FC = () => {
   const navigate = useNavigate();
+  const userType = Cookies.get('user_type');
   const [payments, setPayments] = useState<Payment[]>([]);
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
@@ -97,21 +98,23 @@ const Payments: React.FC = () => {
           <Typography variant="h4" fontWeight={600}>
             Payments
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/payments/add')}
-            sx={{
-              background: '#222',
-              color: '#fff',
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              '&:hover': { background: '#444' },
-            }}
-          >
-            Add Payment
-          </Button>
+          {userType === 'admin' && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/payments/add')}
+              sx={{
+                background: '#222',
+                color: '#fff',
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { background: '#444' },
+              }}
+            >
+              Add Payment
+            </Button>
+          )>
         </Box>
         {error && (
           <Typography color="error" mb={2}>
