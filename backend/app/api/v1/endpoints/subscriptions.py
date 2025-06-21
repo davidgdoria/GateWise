@@ -57,9 +57,10 @@ async def create_subscription(subscription: SubscriptionCreate, db: AsyncSession
     return new_subscription
 
 from fastapi_pagination import Page, paginate
+from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 
 from app.core.security import verify_token
-from app.models.user import User
+from app.models.user import User, UserType
 
 class VehicleParkingAssociationIn(BaseModel):
     vehicle_id: int
@@ -124,10 +125,14 @@ async def associate_vehicle_to_parking_space(
     await db.commit()
     return VehicleParkingAssociationOut(vehicle_id=data.vehicle_id, parking_space_id=parking_space_id)
 
-@router.get("/", response_model=Page[SubscriptionOut], dependencies=[Depends(admin_required)])
-async def list_subscriptions(db: AsyncSession = Depends(get_db)):
-    query = select(Subscription)
-    from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
+@router.get("/", response_model=Page[SubscriptionOut])
+async def list_subscriptions(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Admins get all subscriptions; regular users only their own."""
+    if current_user.type == UserType.admin:
+        query = select(Subscription)
+    else:
+        query = select(Subscription).where(Subscription.user_id == current_user.id)
+
     page = await sqlalchemy_paginate(db, query)
     page.items = [SubscriptionOut.model_validate(item, from_attributes=True) for item in page.items]
     return page
@@ -169,6 +174,7 @@ async def allocate_parking_spaces(subscription_id: int, allocation: ParkingSpace
     return {"parking_spaces": [ParkingSpaceOut.from_orm(s) for s in spaces]}
 
 from fastapi_pagination import Page, paginate
+from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 
 from sqlalchemy.orm import selectinload
 from app.models.schemas import ParkingSpaceWithVehicleOut, VehicleOut
