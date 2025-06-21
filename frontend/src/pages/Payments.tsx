@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -13,7 +12,6 @@ import {
   Chip,
   TablePagination,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -98,23 +96,6 @@ const Payments: React.FC = () => {
           <Typography variant="h4" fontWeight={600}>
             Payments
           </Typography>
-          {userType === 'admin' && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/payments/add')}
-              sx={{
-                background: '#222',
-                color: '#fff',
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': { background: '#444' },
-              }}
-            >
-              Add Payment
-            </Button>
-          )}
         </Box>
         {error && (
           <Typography color="error" mb={2}>
