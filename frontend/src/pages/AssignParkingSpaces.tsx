@@ -62,7 +62,7 @@ const AssignParkingSpaces: React.FC = () => {
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         // Get the assigned spaces and add them to the spaces list
-        const assignedSpaces = res.data || [];
+        const assignedSpaces = Array.isArray(res.data) ? res.data : (res.data.items || []);
         setSpaces(prevSpaces => [...prevSpaces, ...assignedSpaces]);
         
         // Pre-fill the dropdowns with assigned spaces
