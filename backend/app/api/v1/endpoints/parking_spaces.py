@@ -58,6 +58,8 @@ async def list_parking_spaces(
         query = query.where(ParkingSpace.is_allocated == is_allocated)
     if name:
         query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
+    # Order by ID to ensure consistent pagination
+    query = query.order_by(ParkingSpace.id)
     return await sqlalchemy_paginate(db, query, params)
 
 @router.get("/me", response_model=Page[ParkingSpaceOut])
@@ -71,7 +73,7 @@ async def list_my_parking_spaces(
         .join(SubscriptionParkingSpace)
         .join(Subscription)
         .where(Subscription.user_id == current_user.id)
-    )
+    ).order_by(ParkingSpace.id)
     return await sqlalchemy_paginate(db, query, params)
 
 @router.put("/{parking_space_id}", response_model=ParkingSpaceOut)
