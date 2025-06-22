@@ -67,15 +67,29 @@ async def list_parking_spaces(
     name: Optional[str] = Query(None),
     params: Params = Depends(),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    query = select(ParkingSpace)
-    if is_allocated is not None:
-        query = query.where(ParkingSpace.is_allocated == is_allocated)
-    if name:
-        query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
-    # Order by ID to ensure consistent pagination
-    query = query.order_by(ParkingSpace.id)
+    # Admins can see everything; regular users see apenas as suas vagas
+    if current_user.type == UserType.admin:
+        query = select(ParkingSpace)
+        if is_allocated is not None:
+            query = query.where(ParkingSpace.is_allocated == is_allocated)
+        if name:
+            query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
+        query = query.order_by(ParkingSpace.id)
+    else:
+        # join subscriptions to filter
+        query = (
+            select(ParkingSpace)
+            .join(SubscriptionParkingSpace)
+            .join(Subscription)
+            .where(Subscription.user_id == current_user.id)
+        )
+        if is_allocated is not None:
+            query = query.where(ParkingSpace.is_allocated == is_allocated)
+        if name:
+            query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
+        query = query.order_by(ParkingSpace.id)
     return await sqlalchemy_paginate(db, query, params)
 
 @router.get("/me", response_model=Page[ParkingSpaceOut])
