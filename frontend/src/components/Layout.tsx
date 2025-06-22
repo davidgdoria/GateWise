@@ -60,12 +60,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
     ];
 
+    const userItems = [
+      { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
+    ];
+
     const adminItems = [
       { text: 'Users', icon: <PeopleIcon />, path: '/users' },
       { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
     ];
 
-    return userType === 'admin' ? [...commonItems, ...adminItems] : commonItems;
+    if (userType === 'admin') {
+      return [...commonItems, ...adminItems];
+    } else {
+      return [...commonItems, ...userItems];
+    }
   };
 
   const menuItems = getMenuItems();

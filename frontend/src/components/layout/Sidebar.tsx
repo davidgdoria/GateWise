@@ -12,12 +12,18 @@ import {
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
   { text: 'Users', icon: <PeopleIcon />, path: '/users' },
+];
+
+const userMenuItems = [
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+  { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
 ];
 
 const Sidebar: React.FC = () => {
@@ -48,7 +54,42 @@ const Sidebar: React.FC = () => {
       </Box>
       <Divider />
       <List>
-        {menuItems.map((item) => (
+        {userType === 'admin' ? menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              selected={location.pathname === item.path}
+              onClick={() => handleNavigation(item.path)}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: '#f5f5f5',
+                  '&:hover': {
+                    backgroundColor: '#f5f5f5',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: '#f5f5f5',
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: location.pathname === item.path ? 'primary.main' : 'inherit',
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.text}
+                sx={{
+                  '& .MuiTypography-root': {
+                    fontWeight: location.pathname === item.path ? 600 : 400,
+                    color: location.pathname === item.path ? 'primary.main' : 'inherit',
+                  },
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+        )) : userMenuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={location.pathname === item.path}

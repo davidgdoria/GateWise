@@ -114,6 +114,7 @@ interface Payment {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userFullName, setUserFullName] = useState<string>('');
+  const [userType, setUserType] = useState<string>('');
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -121,6 +122,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<string>('vehicles');
+  
+  // User-specific data
+  const [userVehicles, setUserVehicles] = useState<any[]>([]);
+  const [userParkingSpaces, setUserParkingSpaces] = useState<any[]>([]);
+  const [userSubscriptions, setUserSubscriptions] = useState<any[]>([]);
 
   // Mock data for overview, dailyStats, spaces
   const overview = {
@@ -138,6 +144,60 @@ export default function Dashboard() {
     fetchVehicles,
   } = useVehicles();
   const { spaces, total: totalSpaces, loading: parkingLoading, error: parkingError, fetchParkingSpaces } = useParking();
+
+  const fetchUserVehicles = async () => {
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/v1/vehicles`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      setUserVehicles(response.data.items || []);
+    } catch (error) {
+      console.error('Error fetching user vehicles:', error);
+    }
+  };
+
+  const fetchUserParkingSpaces = async () => {
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/v1/parking-spaces`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      setUserParkingSpaces(response.data.items || []);
+    } catch (error) {
+      console.error('Error fetching user parking spaces:', error);
+    }
+  };
+
+  const fetchUserSubscriptions = async () => {
+    try {
+      const token = Cookies.get('access_token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/v1/subscriptions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      setUserSubscriptions(response.data.items || []);
+    } catch (error) {
+      console.error('Error fetching user subscriptions:', error);
+    }
+  };
 
   const fetchAccessLogs = async () => {
     try {
@@ -185,18 +245,28 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/api/v1/payments`, {
+      // Use different endpoint based on user type
+      const endpoint = userType === 'user' 
+        ? `${API_BASE_URL}/api/v1/payments/?page=1&size=10`
+        : `${API_BASE_URL}/api/v1/payments`;
+
+      const response = await axios.get(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       setPayments(response.data.items || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
-      setError('Failed to fetch payments');
+      setError('Failed to fetch payments.');
     }
   };
 
   const fetchTotalPaid = async () => {
+    // Only fetch total paid for admin users
+    if (userType !== 'admin') {
+      return;
+    }
+    
     try {
       const token = Cookies.get('access_token');
       if (!token) {
@@ -221,6 +291,7 @@ export default function Dashboard() {
         const userData = await authService.getCurrentUser();
         if (userData) {
           setUserFullName(userData.full_name || userData.username);
+          setUserType(userData.type);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -236,7 +307,10 @@ export default function Dashboard() {
         fetchAccessLogs(),
         fetchSubscriptions(),
         fetchPayments(),
-        fetchTotalPaid()
+        fetchTotalPaid(),
+        fetchUserVehicles(),
+        fetchUserParkingSpaces(),
+        fetchUserSubscriptions()
       ]);
       setLoading(false);
     };
@@ -476,150 +550,292 @@ export default function Dashboard() {
           <Typography fontWeight={500}>{userFullName || 'Loading...'}</Typography>
         </Box>
       </Box>
-      {/* Cards */}
-      <Grid container spacing={3} mb={2}>
-        <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              background: '#0a2a5c',
-              color: '#fff',
-              borderRadius: 4,
-              boxShadow: 0,
-              minHeight: 140,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'box-shadow 0.2s',
-              '&:hover': { boxShadow: 4 },
-            }}
-            onClick={() => navigate('/vehicles')}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#fff' }} />
-                <Box>
-                  <Typography variant="subtitle2" color="#b3c6e0">Vehicles</Typography>
-                  <Typography variant="body2" color="#b3c6e0">Active</Typography>
-                </Box>
-              </Box>
-              <Typography variant="h3" fontWeight={700}>{total}</Typography>
-              <Typography variant="body2" color="#b3c6e0">
-                {accessLogs.length} total entries
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              background: '#fff',
-              borderRadius: 4,
-              boxShadow: 0,
-              minHeight: 140,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'box-shadow 0.2s',
-              '&:hover': { boxShadow: 4 },
-            }}
-            onClick={() => navigate('/parking-spaces')}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
-                <Box>
-                  <Typography variant="subtitle2" color="#0a2a5c">Parking Spaces</Typography>
-                  <Typography variant="body2" color="#666">Total</Typography>
-                </Box>
-              </Box>
-              <Typography variant="h3" fontWeight={700} color="#0a2a5c">
-                {totalSpaces}
-              </Typography>
-              <Typography variant="body2" color="#666">
-                {spaces.length} loaded
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              background: '#fff',
-              borderRadius: 4,
-              boxShadow: 0,
-              minHeight: 140,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'box-shadow 0.2s',
-              '&:hover': { boxShadow: 4 },
-            }}
-            onClick={() => navigate('/payments')}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={1}>
-                <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
-                <Box>
-                  <Typography variant="subtitle2" color="#0a2a5c">Payments</Typography>
-                  <Typography variant="body2" color="#666">Total Paid</Typography>
-                </Box>
-              </Box>
-              <Typography variant="h3" fontWeight={700} color="#0a2a5c">
-                €{totalPaid.toFixed(2)}
-              </Typography>
-              <Typography variant="body2" color="#666">
-                {payments.length} payments processed
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-      {/* Access Chart Card */}
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card sx={{ borderRadius: 4, boxShadow: 0 }}>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" fontWeight={600}>{getChartTitle()}</Typography>
-                <Box display="flex" gap={2}>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
-                    sx={{ borderRadius: 2, textTransform: 'none' }}
-                    onClick={handleExportData}
-                    disabled={accessLogs.length === 0}
-                  >
-                    Export data
-                  </Button>
-                  <FormControl size="small">
-                    <Select defaultValue="14d" sx={{ borderRadius: 2, fontWeight: 500 }}>
-                      <MenuItem value="14d">Last 14 Days</MenuItem>
-                      <MenuItem value="30d">Last 30 Days</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <FormControl size="small">
-                    <Select 
-                      value={selectedGraph}
-                      sx={{ borderRadius: 2, fontWeight: 500, minWidth: 120 }}
-                      onChange={(e) => handleGraphChange(e.target.value)}
-                    >
-                      <MenuItem value="vehicles">Vehicles</MenuItem>
-                      <MenuItem value="subscriptions">Subscriptions</MenuItem>
-                      <MenuItem value="payments">Payments</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              </Box>
-              <Box sx={{ height: 400, width: '100%', maxWidth: 900, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Line data={chartData} options={chartOptions} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+
+      {/* User-specific Dashboard */}
+      {userType === 'user' ? (
+        <>
+          {/* User Cards */}
+          <Grid container spacing={3} mb={2}>
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  background: '#0a2a5c',
+                  color: '#fff',
+                  borderRadius: 4,
+                  boxShadow: 0,
+                  minHeight: 140,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 4 },
+                }}
+                onClick={() => navigate('/vehicles')}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#fff' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="#b3c6e0">My Vehicles</Typography>
+                      <Typography variant="body2" color="#b3c6e0">Registered</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h3" fontWeight={700}>{userVehicles.length}</Typography>
+                  <Typography variant="body2" color="#b3c6e0">
+                    {userVehicles.length === 1 ? 'vehicle' : 'vehicles'} registered
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  background: '#fff',
+                  borderRadius: 4,
+                  boxShadow: 0,
+                  minHeight: 140,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 4 },
+                }}
+                onClick={() => navigate('/parking-spaces')}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="#0a2a5c">My Parking Spaces</Typography>
+                      <Typography variant="body2" color="#666">Allocated</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h3" fontWeight={700} color="#0a2a5c">
+                    {userParkingSpaces.length}
+                  </Typography>
+                  <Typography variant="body2" color="#666">
+                    {userParkingSpaces.length === 1 ? 'space' : 'spaces'} allocated
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  background: '#fff',
+                  borderRadius: 4,
+                  boxShadow: 0,
+                  minHeight: 140,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 4 },
+                }}
+                onClick={() => navigate('/subscriptions')}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <SubscriptionsIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="#0a2a5c">My Subscriptions</Typography>
+                      <Typography variant="body2" color="#666">Active</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h3" fontWeight={700} color="#0a2a5c">
+                    {userSubscriptions.filter(sub => sub.status === 'active').length}
+                  </Typography>
+                  <Typography variant="body2" color="#666">
+                    {userSubscriptions.length} total subscriptions
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          {/* User Activity Summary */}
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 4, boxShadow: 0 }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} mb={2}>Recent Activity</Typography>
+                  <Box display="flex" gap={3}>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700} color="#0a2a5c">
+                        {accessLogs.filter(log => log.granted).length}
+                      </Typography>
+                      <Typography variant="body2" color="#666">Successful Entries</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700} color="#0a2a5c">
+                        {accessLogs.filter(log => !log.granted).length}
+                      </Typography>
+                      <Typography variant="body2" color="#666">Denied Entries</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700} color="#0a2a5c">
+                        {payments.filter(p => p.status === 'completed').length}
+                      </Typography>
+                      <Typography variant="body2" color="#666">Completed Payments</Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </>
+      ) : (
+        <>
+          {/* Admin Dashboard - Original Content */}
+          {/* Cards */}
+          <Grid container spacing={3} mb={2}>
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  background: '#0a2a5c',
+                  color: '#fff',
+                  borderRadius: 4,
+                  boxShadow: 0,
+                  minHeight: 140,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 4 },
+                }}
+                onClick={() => navigate('/vehicles')}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#fff' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="#b3c6e0">Vehicles</Typography>
+                      <Typography variant="body2" color="#b3c6e0">Active</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h3" fontWeight={700}>{total}</Typography>
+                  <Typography variant="body2" color="#b3c6e0">
+                    {accessLogs.length} total entries
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  background: '#fff',
+                  borderRadius: 4,
+                  boxShadow: 0,
+                  minHeight: 140,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 4 },
+                }}
+                onClick={() => navigate('/parking-spaces')}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="#0a2a5c">Parking Spaces</Typography>
+                      <Typography variant="body2" color="#666">Total</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h3" fontWeight={700} color="#0a2a5c">
+                    {totalSpaces}
+                  </Typography>
+                  <Typography variant="body2" color="#666">
+                    {spaces.length} loaded
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  background: '#fff',
+                  borderRadius: 4,
+                  boxShadow: 0,
+                  minHeight: 140,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 4 },
+                }}
+                onClick={() => navigate('/payments')}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="#0a2a5c">Payments</Typography>
+                      <Typography variant="body2" color="#666">Total Paid</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h3" fontWeight={700} color="#0a2a5c">
+                    €{totalPaid.toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2" color="#666">
+                    {payments.length} payments processed
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+          {/* Access Chart Card */}
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 4, boxShadow: 0 }}>
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6" fontWeight={600}>{getChartTitle()}</Typography>
+                    <Box display="flex" gap={2}>
+                      <Button 
+                        variant="outlined" 
+                        size="small" 
+                        sx={{ borderRadius: 2, textTransform: 'none' }}
+                        onClick={handleExportData}
+                        disabled={accessLogs.length === 0}
+                      >
+                        Export data
+                      </Button>
+                      <FormControl size="small">
+                        <Select defaultValue="14d" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                          <MenuItem value="14d">Last 14 Days</MenuItem>
+                          <MenuItem value="30d">Last 30 Days</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <FormControl size="small">
+                        <Select 
+                          value={selectedGraph}
+                          sx={{ borderRadius: 2, fontWeight: 500, minWidth: 120 }}
+                          onChange={(e) => handleGraphChange(e.target.value)}
+                        >
+                          <MenuItem value="vehicles">Vehicles</MenuItem>
+                          <MenuItem value="subscriptions">Subscriptions</MenuItem>
+                          <MenuItem value="payments">Payments</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+                  <Box sx={{ height: 400, width: '100%', maxWidth: 900, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Line data={chartData} options={chartOptions} />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </>
+      )}
     </Box>
   );
 }
