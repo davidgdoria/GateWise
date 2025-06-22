@@ -145,6 +145,22 @@ class ParkingSpaceOut(BaseModel):
 class ParkingSpaceWithVehicleOut(ParkingSpaceOut):
     vehicle: 'VehicleOut | None' = None
 
+class ParkingLotCreate(BaseModel):
+    name: str
+    address: str
+    total_spaces: int
+    status: str = "active"
+
+class ParkingLotOut(BaseModel):
+    id: int
+    name: str
+    address: str
+    status: str
+    total_spaces: int
+
+    class Config:
+        from_attributes = True
+
 class UserShortOut(BaseModel):
     id: int
     email: str

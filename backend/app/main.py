@@ -7,6 +7,7 @@ from fastapi_pagination import add_pagination
 from app.api.v1.endpoints.plans import router as plans_router
 from app.api.v1.endpoints.subscriptions import router as subscriptions_router
 from app.api.v1.endpoints.payments import router as payments_router
+from app.api.v1.endpoints.parking_lots import router as parking_lots_router
 from app.api.v1.endpoints import access
 
 app = FastAPI()
@@ -35,6 +36,8 @@ app.include_router(vehicles_router, prefix="/api/v1/vehicles")
 app.include_router(users_router, prefix="/api/v1/users")
 # Parking spaces endpoints: /api/v1/parking-spaces
 app.include_router(parking_spaces_router, prefix="/api/v1/parking-spaces")
+# Parking lots endpoints: /api/v1/parking-lots
+app.include_router(parking_lots_router, prefix="/api/v1/parking-lots")
 # Plan endpoints: /api/v1/plans
 app.include_router(plans_router, prefix="/api/v1/plans")
 # Subscription endpoints: /api/v1/subscriptions

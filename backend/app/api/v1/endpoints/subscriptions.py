@@ -92,7 +92,7 @@ async def get_current_user(username: str = Depends(verify_token), db: AsyncSessi
 @router.get("/my", response_model=Page[SubscriptionOut])
 async def list_my_subscriptions(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = select(Subscription).where(Subscription.user_id == current_user.id)
-    return await paginate(db, query)
+    return await sqlalchemy_paginate(db, query)
 
 from fastapi import Path
 
@@ -193,10 +193,29 @@ from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from sqlalchemy.orm import selectinload
 from app.models.schemas import ParkingSpaceWithVehicleOut, VehicleOut
 
-@router.get("/{subscription_id}/parking-spaces", response_model=Page[ParkingSpaceWithVehicleOut], dependencies=[Depends(admin_required)])
-async def get_subscription_parking_spaces(subscription_id: int, db: AsyncSession = Depends(get_db)):
-    query = select(ParkingSpace).options(selectinload(ParkingSpace.vehicle)).join(SubscriptionParkingSpace).where(SubscriptionParkingSpace.subscription_id == subscription_id)
-    return await paginate(db, query)
+@router.get("/{subscription_id}/parking-spaces", response_model=Page[ParkingSpaceWithVehicleOut])
+async def get_subscription_parking_spaces(
+    subscription_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # ensure subscription exists
+    result = await db.execute(select(Subscription).where(Subscription.id == subscription_id))
+    subscription = result.scalar_one_or_none()
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+
+    # permission: admin or owner
+    if current_user.type != UserType.admin and subscription.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not allowed to view these parking spaces")
+
+    query = (
+        select(ParkingSpace)
+        .options(selectinload(ParkingSpace.vehicle))
+        .join(SubscriptionParkingSpace)
+        .where(SubscriptionParkingSpace.subscription_id == subscription_id)
+    )
+    return await sqlalchemy_paginate(db, query)
 
 from datetime import datetime
 
