@@ -193,10 +193,57 @@ async def seed_subscriptions_and_allocations():
     print("Subscrições e alocações inseridas.")
 
 async def seed_access_logs():
+    """Seed AccessLog records.
+
+    Creates:
+    1. Deterministic data – for each of the last 30 days, generate
+       *one* accepted and *one* failed access check so that analytics
+       for an entire month are always populated.
+    2. Additional random data (kept from the previous implementation)
+       to keep the dataset diverse and realistic.
+    """
     async with AsyncSessionLocal() as session:
         vehicles = (await session.execute(select(Vehicle))).scalars().all()
         users = (await session.execute(select(User))).scalars().all()
         logs = []
+        # ------------------------------------------------------------------
+        # 1. Deterministic month-long data (1 accepted + 1 failed per day)
+        # ------------------------------------------------------------------
+        from calendar import monthrange
+        today = datetime.now()
+        days_in_month = monthrange(today.year, today.month)[1]
+        # Pick any vehicle to use for deterministic logs – use first admin
+        # vehicle where possible, otherwise any vehicle.
+        admin_user = next((u for u in users if u.username == "admin@gatewise.com"), None)
+        deterministic_vehicle = None
+        if admin_user:
+            deterministic_vehicle = next((v for v in vehicles if v.owner_id == admin_user.id), None)
+        if not deterministic_vehicle and vehicles:
+            deterministic_vehicle = vehicles[0]
+        if deterministic_vehicle:
+            for day in range(1, days_in_month + 1):
+                ts_base = datetime(today.year, today.month, day, 12, 0, 0)
+                # Accepted log
+                logs.append(AccessLog(
+                    license_plate=deterministic_vehicle.license_plate,
+                    vehicle_id=deterministic_vehicle.id,
+                    user_id=deterministic_vehicle.owner_id,
+                    granted=True,
+                    reason="Access granted: monthly deterministic seed",
+                    timestamp=ts_base,
+                ))
+                # Failed log two minutes later
+                logs.append(AccessLog(
+                    license_plate=deterministic_vehicle.license_plate,
+                    vehicle_id=deterministic_vehicle.id,
+                    user_id=deterministic_vehicle.owner_id,
+                    granted=False,
+                    reason="Access denied: monthly deterministic seed",
+                    timestamp=ts_base + timedelta(minutes=2),
+                ))
+        # ------------------------------------------------------------------
+        # 2. Random historic data (existing implementation, kept as-is)
+        # ------------------------------------------------------------------
         # Muitos logs para user 1 (admin@gatewise.com)
         admin_user = next((u for u in users if u.username == "admin@gatewise.com"), None)
         admin_vehicles = [v for v in vehicles if v.owner_id == admin_user.id] if admin_user else []

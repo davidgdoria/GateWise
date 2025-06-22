@@ -7,7 +7,8 @@ from app.models.subscription import Subscription
 from app.models.access_log import AccessLog
 from app.models.user import User, UserType
 from app.models.schemas import AccessLogOut, AccessLogUserOut
-from fastapi_pagination import Page
+from fastapi_pagination import Page, paginate
+from typing import List
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from app.api.v1.endpoints.users import admin_required
 from app.api.v1.endpoints.subscriptions import get_current_user
@@ -58,6 +59,18 @@ async def check_vehicle_access(data: AccessCheckIn, db: AsyncSession = Depends(g
     db.add(log)
     await db.commit()
     return AccessCheckOut(access_granted=access_granted, reason=reason)
+
+@router.get("/access_logs/all", response_model=List[AccessLogOut])
+async def list_all_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Return ALL access logs without pagination."""
+    if current_user.type == UserType.admin:
+        result = await db.execute(select(AccessLog).order_by(AccessLog.timestamp.desc()))
+    else:
+        vehicles_result = await db.execute(select(Vehicle).where(Vehicle.owner_id == current_user.id))
+        vehicles = vehicles_result.scalars().all()
+        plates = [v.license_plate for v in vehicles]
+        result = await db.execute(select(AccessLog).where(AccessLog.license_plate.in_(plates)).order_by(AccessLog.timestamp.desc()))
+    return result.scalars().all()
 
 @router.get("/access_logs", response_model=Page[AccessLogOut])
 async def list_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
