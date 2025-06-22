@@ -50,19 +50,27 @@ async def list_parking_spaces(
     is_allocated: Optional[bool] = Query(None),
     name: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    _: User = Depends(get_current_user)
 ):
     query = select(ParkingSpace)
     if is_allocated is not None:
         query = query.where(ParkingSpace.is_allocated == is_allocated)
     if name:
         query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
-    if current_user.type == UserType.admin:
-        return await sqlalchemy_paginate(db, query)
-    else:
-        # spaces linked to user subscriptions
-        query = select(ParkingSpace).join(SubscriptionParkingSpace).join(Subscription).where(Subscription.user_id == current_user.id)
-        return await sqlalchemy_paginate(db, query)
+    return await sqlalchemy_paginate(db, query)
+
+@router.get("/me", response_model=Page[ParkingSpaceOut])
+async def list_my_parking_spaces(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    query = (
+        select(ParkingSpace)
+        .join(SubscriptionParkingSpace)
+        .join(Subscription)
+        .where(Subscription.user_id == current_user.id)
+    )
+    return await sqlalchemy_paginate(db, query)
 
 @router.put("/{parking_space_id}", response_model=ParkingSpaceOut)
 async def update_parking_space(
