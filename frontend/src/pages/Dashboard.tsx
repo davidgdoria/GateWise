@@ -215,11 +215,18 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/api/v1/access_logs`, {
+      const isAdmin = Cookies.get('user_type') === 'admin';
+      const endpoint = isAdmin ? '/api/v1/access_logs/all' : '/api/v1/access_logs';
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      setAccessLogs(response.data.items || []);
+      const data = response.data;
+      if (isAdmin) {
+        setAccessLogs(Array.isArray(data) ? data : data.items || []);
+      } else {
+        setAccessLogs(data.items || []);
+      }
     } catch (error) {
       console.error('Error fetching access logs:', error);
       setError('Failed to fetch access logs');
