@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Paper, TextField, MenuItem, Select, FormControl, InputLabel, Button } from '@mui/material';
-import Layout from '../components/Layout';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -143,11 +142,10 @@ const AssignParkingSpaces: React.FC = () => {
   };
 
   if (!subscription || !user || !plan) {
-    return <Layout><Box p={4}><Typography color="error">Missing subscription, user, or plan data.</Typography></Box></Layout>;
+    return <Box p={4}><Typography color="error">Missing subscription, user, or plan data.</Typography></Box>;
   }
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -189,6 +187,14 @@ const AssignParkingSpaces: React.FC = () => {
             <Button variant="outlined" color="secondary" onClick={() => navigate('/subscriptions')}>
               {userType === 'user' ? 'Back' : 'Cancel'}
             </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/parking-lot-layout', {
+                state: { subscription, user, plan }
+              })}
+            >
+              View Parking Layout
+            </Button>
             {userType === 'admin' && (
               <Button
                 variant="contained"
@@ -203,7 +209,6 @@ const AssignParkingSpaces: React.FC = () => {
           </Box>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

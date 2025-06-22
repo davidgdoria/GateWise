@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 
 const ContactUsInternal: React.FC = () => {

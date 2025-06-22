@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import Cookies from 'js-cookie';
@@ -63,7 +62,6 @@ const AddUser: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -146,7 +144,6 @@ const AddUser: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

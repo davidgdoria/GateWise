@@ -11,7 +11,6 @@ import {
   MenuItem,
   Grid
 } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -133,7 +132,6 @@ const AddPayment: React.FC = () => {
   const selectedSubscriptionData = subscriptions.find(sub => sub.id === selectedSubscription);
 
   return (
-    <Layout>
       <Box p={4}>
         <Typography variant="h4" gutterBottom>
           Add Payment
@@ -201,7 +199,6 @@ const AddPayment: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 
