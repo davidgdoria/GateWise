@@ -111,6 +111,12 @@ interface Payment {
   status: string;
 }
 
+interface PaymentsSummary {
+  expected_amount_this_month: number;
+  pending_payments_count: number;
+  pending_payments_amount: number;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userFullName, setUserFullName] = useState<string>('');
@@ -119,6 +125,7 @@ export default function Dashboard() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [totalPaid, setTotalPaid] = useState<number>(0);
+  const [paymentsSummary, setPaymentsSummary] = useState<PaymentsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<string>('vehicles');
@@ -274,14 +281,15 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/api/v1/payments/total-paid`, {
+      // Use the new payments summary endpoint for admin users
+      const response = await axios.get(`${API_BASE_URL}/api/v1/payments/summary`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      setTotalPaid(response.data || 0);
+      setPaymentsSummary(response.data);
     } catch (error) {
-      console.error('Error fetching total paid:', error);
-      setError('Failed to fetch total paid amount');
+      console.error('Error fetching payments summary:', error);
+      setError('Failed to fetch payments summary');
     }
   };
 
@@ -307,7 +315,6 @@ export default function Dashboard() {
         fetchAccessLogs(),
         fetchSubscriptions(),
         fetchPayments(),
-        fetchTotalPaid(),
         fetchUserVehicles(),
         fetchUserParkingSpaces(),
         fetchUserSubscriptions()
@@ -317,6 +324,13 @@ export default function Dashboard() {
 
     fetchAllData();
   }, [fetchVehicles, fetchParkingSpaces, navigate]);
+
+  // Separate useEffect to fetch payments summary when userType is set
+  useEffect(() => {
+    if (userType === 'admin') {
+      fetchTotalPaid();
+    }
+  }, [userType]);
 
   if (loading) {
     return (
@@ -778,15 +792,20 @@ export default function Dashboard() {
                     <DirectionsCarIcon sx={{ fontSize: 32, mr: 2, color: '#0a2a5c' }} />
                     <Box>
                       <Typography variant="subtitle2" color="#0a2a5c">Payments</Typography>
-                      <Typography variant="body2" color="#666">Total Paid</Typography>
+                      <Typography variant="body2" color="#666">Pending Amount</Typography>
                     </Box>
                   </Box>
                   <Typography variant="h3" fontWeight={700} color="#0a2a5c">
-                    €{totalPaid.toFixed(2)}
+                    €{paymentsSummary?.pending_payments_amount?.toFixed(2) || '0.00'}
                   </Typography>
-                  <Typography variant="body2" color="#666">
-                    {payments.length} payments processed
-                  </Typography>
+                  <Box display="flex" justifyContent="space-between" mt={1}>
+                    <Typography variant="body2" color="#666">
+                      Expected: €{paymentsSummary?.expected_amount_this_month?.toFixed(2) || '0.00'}
+                    </Typography>
+                    <Typography variant="body2" color="#666">
+                      {paymentsSummary?.pending_payments_count || 0} pending
+                    </Typography>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
