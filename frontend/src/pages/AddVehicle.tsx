@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Paper, SelectChangeEvent } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -98,7 +97,6 @@ const AddVehicle: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -200,7 +198,6 @@ const AddVehicle: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 

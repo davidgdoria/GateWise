@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper, FormControlLabel, Checkbox } from '@mui/material';
-import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -47,7 +46,6 @@ const AddParkingSpace: React.FC = () => {
   };
 
   return (
-    <Layout>
       <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 4 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -106,7 +104,6 @@ const AddParkingSpace: React.FC = () => {
           </form>
         </Paper>
       </Box>
-    </Layout>
   );
 };
 
