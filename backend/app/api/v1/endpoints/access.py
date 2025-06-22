@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db.session import get_db
@@ -7,7 +7,7 @@ from app.models.subscription import Subscription
 from app.models.access_log import AccessLog
 from app.models.user import User, UserType
 from app.models.schemas import AccessLogOut, AccessLogUserOut
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page, paginate, Params
 from typing import List
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from app.api.v1.endpoints.users import admin_required
@@ -73,17 +73,28 @@ async def list_all_access_logs(db: AsyncSession = Depends(get_db), current_user:
     return result.scalars().all()
 
 @router.get("/access_logs", response_model=Page[AccessLogOut])
-async def list_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def list_access_logs(
+    search: str | None = Query(None),
+    params: Params = Depends(),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Return paginated access logs. Admins see all; regular users only their own vehicles.
+    Optional `search` parameter filters by license_plate (case-insensitive, partial match)."""
     if current_user.type == UserType.admin:
-        query = select(AccessLog).order_by(AccessLog.timestamp.desc())
-        return await sqlalchemy_paginate(db, query)
+        query = select(AccessLog)
     else:
         # Retrieve vehicles owned by the current user
         vehicles_result = await db.execute(select(Vehicle).where(Vehicle.owner_id == current_user.id))
         vehicles = vehicles_result.scalars().all()
         plates = [v.license_plate for v in vehicles]
-        query = select(AccessLog).where(AccessLog.license_plate.in_(plates)).order_by(AccessLog.timestamp.desc())
-        return await sqlalchemy_paginate(db, query)
+        query = select(AccessLog).where(AccessLog.license_plate.in_(plates))
+
+    if search:
+        query = query.where(AccessLog.license_plate.ilike(f"%{search}%"))
+
+    query = query.order_by(AccessLog.timestamp.desc())
+    return await sqlalchemy_paginate(db, query, params)
 
 @router.get("/access_logs/my", response_model=Page[AccessLogUserOut])
 async def list_my_access_logs(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):

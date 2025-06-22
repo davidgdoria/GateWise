@@ -42,9 +42,10 @@ const statusColor = (status: string) => {
 
 const Reports: React.FC = () => {
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState<any[]>([]);
   const userType = Cookies.get('user_type');
 
   useEffect(() => {
@@ -59,11 +60,19 @@ const Reports: React.FC = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          params: {
+            page,
+            size: 10,
+            search: search || undefined,
+          },
         });
         
         // Transform access logs to report format
-        const transformedReports = response.data.items || response.data || [];
-        setReports(transformedReports);
+        const data = response.data;
+        const items = data.items || data;
+        setReports(items);
+        // total pages from API pagination metadata
+        setTotalPages(data.pages || 1);
       } catch (error) {
         console.error('Error fetching reports:', error);
       } finally {
@@ -72,7 +81,7 @@ const Reports: React.FC = () => {
     };
 
     fetchReports();
-  }, []);
+  }, [page, search]);
 
   return (
       <Box sx={{ width: '100%' }}>
@@ -120,9 +129,6 @@ const Reports: React.FC = () => {
                   ),
                 }}
               />
-              <Button variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
-                Export data
-              </Button>
               {userType === 'admin' && (
                 <FormControl size="small">
                   <Select defaultValue="id" sx={{ borderRadius: 2, fontWeight: 500 }}>
@@ -184,7 +190,7 @@ const Reports: React.FC = () => {
           </TableContainer>
           <Box display="flex" justifyContent="center" mt={3}>
             <Pagination
-              count={20}
+              count={totalPages}
               page={page}
               onChange={(_, value) => setPage(value)}
               shape="rounded"
