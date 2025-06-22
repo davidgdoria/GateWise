@@ -8,7 +8,7 @@ from app.models.subscription import Subscription
 from app.db.session import get_db
 from app.models.user import User, UserType
 from pydantic import BaseModel
-from fastapi_pagination import Page
+from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from app.api.v1.endpoints.subscriptions import get_current_user
 from app.models.schemas import ParkingSpaceOut, ParkingSpaceUpdate
@@ -49,6 +49,7 @@ async def create_parking_space(
 async def list_parking_spaces(
     is_allocated: Optional[bool] = Query(None),
     name: Optional[str] = Query(None),
+    params: Params = Depends(),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user)
 ):
@@ -57,10 +58,11 @@ async def list_parking_spaces(
         query = query.where(ParkingSpace.is_allocated == is_allocated)
     if name:
         query = query.where(ParkingSpace.name.ilike(f"%{name}%"))
-    return await sqlalchemy_paginate(db, query)
+    return await sqlalchemy_paginate(db, query, params)
 
 @router.get("/me", response_model=Page[ParkingSpaceOut])
 async def list_my_parking_spaces(
+    params: Params = Depends(),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -70,7 +72,7 @@ async def list_my_parking_spaces(
         .join(Subscription)
         .where(Subscription.user_id == current_user.id)
     )
-    return await sqlalchemy_paginate(db, query)
+    return await sqlalchemy_paginate(db, query, params)
 
 @router.put("/{parking_space_id}", response_model=ParkingSpaceOut)
 async def update_parking_space(
