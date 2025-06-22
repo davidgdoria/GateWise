@@ -129,6 +129,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<string>('vehicles');
+  const [selectedInterval, setSelectedInterval] = useState<string>('14d');
   
   // User-specific data
   const [userVehicles, setUserVehicles] = useState<any[]>([]);
@@ -346,18 +347,19 @@ export default function Dashboard() {
 
   // Process access logs data for the chart
   const processVehiclesChartData = () => {
-    const last14Days = Array.from({ length: 14 }, (_, i) => {
+    const days = selectedInterval === '30d' ? 30 : 14;
+    const lastDays = Array.from({ length: days }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     }).reverse();
 
-    const grantedData = new Array(14).fill(0);
-    const deniedData = new Array(14).fill(0);
+    const grantedData = new Array(days).fill(0);
+    const deniedData = new Array(days).fill(0);
 
     accessLogs.forEach(log => {
       const logDate = log.timestamp.split('T')[0];
-      const dayIndex = last14Days.indexOf(logDate);
+      const dayIndex = lastDays.indexOf(logDate);
       if (dayIndex !== -1) {
         if (log.granted) {
           grantedData[dayIndex]++;
@@ -368,7 +370,7 @@ export default function Dashboard() {
     });
 
     return {
-      labels: last14Days.map(date => {
+      labels: lastDays.map(date => {
         const d = new Date(date);
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }),
@@ -405,24 +407,25 @@ export default function Dashboard() {
       return subDate.getMonth() === currentMonth && subDate.getFullYear() === currentYear;
     });
 
-    const last14Days = Array.from({ length: 14 }, (_, i) => {
+    const days = selectedInterval === '30d' ? 30 : 14;
+    const lastDays = Array.from({ length: days }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     }).reverse();
 
-    const subscriptionsData = new Array(14).fill(0);
+    const subscriptionsData = new Array(days).fill(0);
 
     subscriptionsThisMonth.forEach(sub => {
       const subDate = sub.created_at.split('T')[0];
-      const dayIndex = last14Days.indexOf(subDate);
+      const dayIndex = lastDays.indexOf(subDate);
       if (dayIndex !== -1) {
         subscriptionsData[dayIndex]++;
       }
     });
 
     return {
-      labels: last14Days.map(date => {
+      labels: lastDays.map(date => {
         const d = new Date(date);
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }),
@@ -450,24 +453,25 @@ export default function Dashboard() {
       return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
     });
 
-    const last14Days = Array.from({ length: 14 }, (_, i) => {
+    const days = selectedInterval === '30d' ? 30 : 14;
+    const lastDays = Array.from({ length: days }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     }).reverse();
 
-    const paymentsData = new Array(14).fill(0);
+    const paymentsData = new Array(days).fill(0);
 
     paymentsThisMonth.forEach(payment => {
       const paymentDate = payment.paid_at.split('T')[0];
-      const dayIndex = last14Days.indexOf(paymentDate);
+      const dayIndex = lastDays.indexOf(paymentDate);
       if (dayIndex !== -1) {
         paymentsData[dayIndex] += payment.amount;
       }
     });
 
     return {
-      labels: last14Days.map(date => {
+      labels: lastDays.map(date => {
         const d = new Date(date);
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }),
@@ -499,15 +503,16 @@ export default function Dashboard() {
   };
 
   const getChartTitle = () => {
+    const intervalText = selectedInterval === '30d' ? 'Last 30 Days' : 'Last 14 Days';
     switch (selectedGraph) {
       case 'vehicles':
-        return 'Vehicle Access History';
+        return `Vehicle Access History - ${intervalText}`;
       case 'subscriptions':
-        return 'New Subscriptions This Month';
+        return `New Subscriptions - ${intervalText}`;
       case 'payments':
-        return 'Payments This Month';
+        return `Payments - ${intervalText}`;
       default:
-        return 'Vehicle Access History';
+        return `Vehicle Access History - ${intervalText}`;
     }
   };
 
@@ -550,6 +555,10 @@ export default function Dashboard() {
 
   const handleGraphChange = (graphType: string) => {
     setSelectedGraph(graphType);
+  };
+
+  const handleIntervalChange = (interval: string) => {
+    setSelectedInterval(interval);
   };
 
   return (
@@ -828,7 +837,11 @@ export default function Dashboard() {
                         Export data
                       </Button>
                       <FormControl size="small">
-                        <Select defaultValue="14d" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                        <Select 
+                          value={selectedInterval}
+                          onChange={(e) => handleIntervalChange(e.target.value)}
+                          sx={{ borderRadius: 2, fontWeight: 500 }}
+                        >
                           <MenuItem value="14d">Last 14 Days</MenuItem>
                           <MenuItem value="30d">Last 30 Days</MenuItem>
                         </Select>
