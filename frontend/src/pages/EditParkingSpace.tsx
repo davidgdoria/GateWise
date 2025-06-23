@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Paper, CircularProgress, FormControlLabel, Checkbox } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, CircularProgress, FormControlLabel, Checkbox, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { SelectChangeEvent } from '@mui/material/Select';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
@@ -12,7 +13,8 @@ const EditParkingSpace: React.FC = () => {
     name: '',
     description: '',
     is_allocated: false,
-    is_occupied: false
+    is_occupied: false,
+    type: 'regular'
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +27,8 @@ const EditParkingSpace: React.FC = () => {
         name: location.state.space.name || '',
         description: location.state.space.description || '',
         is_allocated: !!location.state.space.is_allocated,
-        is_occupied: !!location.state.space.is_occupied
+        is_occupied: !!location.state.space.is_occupied,
+        type: location.state.space.type || 'regular'
       });
       setLoading(false);
     } else {
@@ -44,7 +47,8 @@ const EditParkingSpace: React.FC = () => {
             name: res.data.name || '',
             description: res.data.description || '',
             is_allocated: !!res.data.is_allocated,
-            is_occupied: !!res.data.is_occupied
+            is_occupied: !!res.data.is_occupied,
+            type: res.data.type || 'regular'
           });
         } catch (err) {
           setError('Failed to fetch parking space.');
@@ -59,6 +63,11 @@ const EditParkingSpace: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const { value } = event.target;
+    setForm(prev => ({ ...prev, type: value as 'regular' | 'disabled' | 'pregnant' | 'ev' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,6 +119,22 @@ const EditParkingSpace: React.FC = () => {
               margin="normal"
               required
             />
+            <FormControl sx={{ mt: 2, mb: 2 }} fullWidth>
+              <InputLabel id="type-label">Type</InputLabel>
+              <Select
+                labelId="type-label"
+                id="type"
+                name="type"
+                value={form.type}
+                label="Type"
+                onChange={handleSelectChange}
+              >
+                <MenuItem value="regular">Regular</MenuItem>
+                <MenuItem value="disabled">Disabled</MenuItem>
+                <MenuItem value="pregnant">Pregnant</MenuItem>
+                <MenuItem value="ev">EV</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Description"
               name="description"
