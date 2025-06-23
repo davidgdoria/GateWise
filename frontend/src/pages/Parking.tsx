@@ -30,6 +30,7 @@ interface ParkingSpace {
   id: number;
   name: string;
   description: string;
+  type: 'regular' | 'disabled' | 'pregnant' | 'ev';
   is_allocated: boolean;
   is_occupied: boolean;
 }
@@ -165,6 +166,7 @@ const ParkingSpaces: React.FC = () => {
                     <TableCell sx={{ fontWeight: 700 }}>ID</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Allocated</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Occupied</TableCell>
                     {userType === 'admin' && (
@@ -178,6 +180,7 @@ const ParkingSpaces: React.FC = () => {
                       <TableCell>{space.id}</TableCell>
                       <TableCell>{space.name}</TableCell>
                       <TableCell>{space.description}</TableCell>
+                       <TableCell sx={{ textTransform: 'capitalize' }}>{space.type}</TableCell>
                       <TableCell>
                         <Chip
                           label={space.is_allocated ? 'Yes' : 'No'}

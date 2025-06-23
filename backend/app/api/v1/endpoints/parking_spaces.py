@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional, List
+from app.models.parking_space import ParkingSpaceType
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.parking_space import ParkingSpace
+from app.models.parking_space import ParkingSpace, ParkingSpaceType
 from app.models.subscription_parking_space import SubscriptionParkingSpace
 from app.models.subscription import Subscription
 from app.db.session import get_db
@@ -18,6 +19,7 @@ router = APIRouter()
 class ParkingSpaceCreate(BaseModel):
     name: str
     description: str = ""
+    type: ParkingSpaceType = ParkingSpaceType.regular
 
 from app.core.security import verify_token
 
@@ -37,6 +39,7 @@ async def create_parking_space(
     new_space = ParkingSpace(
         name=parking_space.name,
         description=parking_space.description,
+        type=parking_space.type,
         is_allocated=False,
         is_occupied=False
     )
@@ -65,6 +68,7 @@ async def list_all_parking_spaces(
 async def list_parking_spaces(
     is_allocated: Optional[bool] = Query(None),
     name: Optional[str] = Query(None),
+    space_type: Optional[ParkingSpaceType] = Query(None),
     params: Params = Depends(),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

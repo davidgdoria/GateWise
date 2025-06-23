@@ -1,23 +1,43 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, FormControlLabel, Checkbox } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, FormControlLabel, Checkbox, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../config';
 
+interface ParkingSpaceForm {
+  name: string;
+  description: string;
+  is_allocated: boolean;
+  is_occupied: boolean;
+  type: 'regular' | 'disabled' | 'pregnant' | 'ev';
+}
+
 const AddParkingSpace: React.FC = () => {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ParkingSpaceForm>({
     name: '',
     description: '',
     is_allocated: false,
-    is_occupied: false
+    is_occupied: false,
+    type: 'regular'
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = event.target;
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const { name, value } = event.target;
+    setForm(prev => ({ ...prev, [name!]: value as ParkingSpaceForm['type'] }));
+  };
+
+  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,16 +76,32 @@ const AddParkingSpace: React.FC = () => {
               label="Name"
               name="name"
               value={form.name}
-              onChange={handleChange}
+              onChange={handleTextChange}
               fullWidth
               margin="normal"
               required
             />
+            <FormControl sx={{ mt: 2, mb: 2 }}>
+              <InputLabel id="type-label">Type</InputLabel>
+              <Select
+                labelId="type-label"
+                id="type"
+                name="type"
+                value={form.type}
+                label="Type"
+                onChange={handleSelectChange}
+              >
+                <MenuItem value="regular">Regular</MenuItem>
+                <MenuItem value="disabled">Disabled</MenuItem>
+                <MenuItem value="pregnant">Pregnant</MenuItem>
+                <MenuItem value="ev">EV</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Description"
               name="description"
               value={form.description}
-              onChange={handleChange}
+              onChange={handleInputChange}
               fullWidth
               margin="normal"
               required
@@ -74,7 +110,7 @@ const AddParkingSpace: React.FC = () => {
               control={
                 <Checkbox
                   checked={form.is_allocated}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   name="is_allocated"
                   color="primary"
                 />
@@ -86,7 +122,7 @@ const AddParkingSpace: React.FC = () => {
               control={
                 <Checkbox
                   checked={form.is_occupied}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   name="is_occupied"
                   color="primary"
                 />
