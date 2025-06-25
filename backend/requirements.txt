@@ -1,0 +1,14 @@
+fastapi
+fastapi-pagination
+uvicorn
+python-jose[cryptography]
+passlib[bcrypt]>=1.7.4
+bcrypt==3.2.2
+python-multipart
+pydantic
+pydantic-settings
+dotenv
+sqlalchemy[asyncio]
+asyncpg
+alembic
+psycopg2-binary

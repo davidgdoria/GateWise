@@ -1,0 +1,2 @@
+This is a placeholder file to ensure the images directory exists.
+Please replace the parking-hero.jpg image with an actual image of your choice. 
